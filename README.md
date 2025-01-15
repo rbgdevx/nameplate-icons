@@ -1,2 +1,1 @@
-# nameplate-icons
-Nameplate Icons
+# Nameplate Icons
