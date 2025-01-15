@@ -109,6 +109,8 @@
     "CompactUnitFrame_UpdateHealthColor",
     "CompactUnitFrame_UpdateName",
     "NORMAL_FONT_COLOR_CODE",
-    "hash_SlashCmdList"
+    "hash_SlashCmdList",
+    "CLASS_ICON_TCOORDS",
+    "Add"
   ]
 }

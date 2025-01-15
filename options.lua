@@ -1,9 +1,14 @@
 local AddonName, NS = ...
 
+local pairs = pairs
+local next = next
+local tostring = tostring
+
 local tinsert = table.insert
 local tsort = table.sort
 local tconcat = table.concat
 
+--- @type fun(info: table<1|2|3, string>, npcIcon: number, npcGlow: GlowTable): string
 local function GenerateIconString(info, npcIcon, npcGlow)
   local NPC = NS.db[info[1]][info[2]]
   -- Check if the icon and glow data exist, and set defaults if not
@@ -19,99 +24,14 @@ local AceConfig = {
   type = "group",
   childGroups = "tab",
   args = {
-    general = {
-      name = "General",
-      type = "group",
-      order = 1,
-      args = {
-        ignoreNameplateAlpha = {
-          name = "Ignore nameplate alpha",
-          type = "toggle",
-          order = 1,
-          width = "full",
-          get = function(_)
-            return NS.db.general.ignoreNameplateAlpha
-          end,
-          set = function(_, val)
-            NS.db.general.ignoreNameplateAlpha = val
-            NS.OnDbChanged()
-          end,
-        },
-        ignoreNameplateScale = {
-          name = "Ignore nameplate scale",
-          type = "toggle",
-          order = 2,
-          width = "full",
-          get = function(_)
-            return NS.db.general.ignoreNameplateScale
-          end,
-          set = function(_, val)
-            NS.db.general.ignoreNameplateScale = val
-            NS.OnDbChanged()
-          end,
-        },
-        spacer1 = {
-          name = "",
-          type = "description",
-          order = 3,
-          width = "full",
-        },
-        desc = {
-          name = "The following settings may be affected by other addons.",
-          fontSize = "small",
-          type = "description",
-          order = 4,
-          width = "full",
-        },
-        selfClickThrough = {
-          name = "Click Through Self Nameplate",
-          type = "toggle",
-          order = 5,
-          width = "full",
-          get = function(_)
-            return NS.db.general.selfClickThrough
-          end,
-          set = function(_, val)
-            NS.db.general.selfClickThrough = val
-            NS.OnDbChanged()
-          end,
-        },
-        friendlyClickThrough = {
-          name = "Click Through Friendly Nameplates",
-          type = "toggle",
-          order = 6,
-          width = "full",
-          get = function(_)
-            return NS.db.general.friendlyClickThrough
-          end,
-          set = function(_, val)
-            NS.db.general.friendlyClickThrough = val
-            NS.OnDbChanged()
-          end,
-        },
-        enemyClickThrough = {
-          name = "Click Through Enemy Nameplates",
-          type = "toggle",
-          order = 7,
-          width = "full",
-          get = function(_)
-            return NS.db.general.enemyClickThrough
-          end,
-          set = function(_, val)
-            NS.db.general.enemyClickThrough = val
-            NS.OnDbChanged()
-          end,
-        },
-      },
-    },
     icons = {
       name = "Icons",
       type = "group",
       childGroups = "tab",
-      order = 2,
+      order = 1,
       args = {
-        arena = {
-          name = "Arena",
+        arrow = {
+          name = "Arrow",
           type = "group",
           order = 1,
           args = {
@@ -121,10 +41,10 @@ local AceConfig = {
               order = 1,
               width = 0.4,
               get = function(_)
-                return NS.db.arena.enabled
+                return NS.db.arrow.enabled
               end,
               set = function(_, val)
-                NS.db.arena.enabled = val
+                NS.db.arrow.enabled = val
                 NS.OnDbChanged()
               end,
             },
@@ -136,17 +56,18 @@ local AceConfig = {
             },
             test = {
               name = "Test Mode",
+              desc = "Turn on to test settings immediately",
               type = "toggle",
               order = 3,
               width = 1.0,
               disabled = function(_)
-                return not NS.db.arena.enabled
+                return not NS.db.arrow.enabled
               end,
               get = function(_)
-                return NS.db.arena.test
+                return NS.db.arrow.test
               end,
               set = function(_, val)
-                NS.db.arena.test = val
+                NS.db.arrow.test = val
                 NS.OnDbChanged()
               end,
             },
@@ -156,48 +77,116 @@ local AceConfig = {
               order = 4,
               width = "full",
             },
-            showFriendly = {
-              name = "Show Friendly",
-              type = "toggle",
+            desc1 = {
+              name = "Show for:",
+              fontSize = "medium",
+              type = "description",
               order = 5,
-              width = 1.1,
+              width = 0.4,
+            },
+            showFriendly = {
+              name = "Friendly",
+              type = "toggle",
+              order = 6,
+              width = 0.5,
               disabled = function(_)
-                return not NS.db.arena.enabled
+                return not NS.db.arrow.enabled
               end,
               get = function(_)
-                return NS.db.arena.showFriendly
+                return NS.db.arrow.showFriendly
               end,
               set = function(_, val)
-                NS.db.arena.showFriendly = val
+                NS.db.arrow.showFriendly = val
                 NS.OnDbChanged()
               end,
             },
             showEnemy = {
-              name = "Show Enemy",
+              name = "Enemy",
               type = "toggle",
-              order = 6,
-              width = 1.1,
+              order = 7,
+              width = 0.4,
               disabled = function(_)
-                return not NS.db.arena.enabled
+                return not NS.db.arrow.enabled
               end,
               get = function(_)
-                return NS.db.arena.showEnemy
+                return NS.db.arrow.showEnemy
               end,
               set = function(_, val)
-                NS.db.arena.showEnemy = val
+                NS.db.arrow.showEnemy = val
                 NS.OnDbChanged()
               end,
             },
             spacer3 = {
               name = "",
               type = "description",
-              order = 7,
+              order = 8,
+              width = "full",
+            },
+            desc2 = {
+              name = "Show in:",
+              fontSize = "medium",
+              type = "description",
+              order = 9,
+              width = 0.4,
+            },
+            showArena = {
+              name = "Arena",
+              type = "toggle",
+              order = 10,
+              width = 0.4,
+              disabled = function(_)
+                return not NS.db.arrow.enabled
+              end,
+              get = function(_)
+                return NS.db.arrow.showArena
+              end,
+              set = function(_, val)
+                NS.db.arrow.showArena = val
+                NS.OnDbChanged()
+              end,
+            },
+            showBattleground = {
+              name = "Battleground",
+              type = "toggle",
+              order = 11,
+              width = 0.7,
+              disabled = function(_)
+                return not NS.db.arrow.enabled
+              end,
+              get = function(_)
+                return NS.db.arrow.showBattleground
+              end,
+              set = function(_, val)
+                NS.db.arrow.showBattleground = val
+                NS.OnDbChanged()
+              end,
+            },
+            showOutdoors = {
+              name = "Outdoors",
+              type = "toggle",
+              order = 12,
+              width = 0.5,
+              disabled = function(_)
+                return not NS.db.arrow.enabled
+              end,
+              get = function(_)
+                return NS.db.arrow.showOutdoors
+              end,
+              set = function(_, val)
+                NS.db.arrow.showOutdoors = val
+                NS.OnDbChanged()
+              end,
+            },
+            spacer4 = {
+              name = "",
+              type = "description",
+              order = 13,
               width = "full",
             },
             position = {
               name = "Position",
               type = "select",
-              order = 8,
+              order = 14,
               width = 1.0,
               values = {
                 ["LEFT"] = "Left",
@@ -210,394 +199,435 @@ local AceConfig = {
                 "RIGHT",
               },
               disabled = function(_)
-                return not NS.db.arena.enabled
+                return not NS.db.arrow.enabled
               end,
               get = function(_)
-                return NS.db.arena.position
+                return NS.db.arrow.position
               end,
               set = function(_, val)
-                NS.db.arena.position = val
-                NS.OnDbChanged()
-              end,
-            },
-            spacer4 = {
-              name = "",
-              type = "description",
-              order = 9,
-              width = 0.1,
-            },
-            attachToHealthBar = {
-              name = "Attach directly to the healthbar",
-              type = "toggle",
-              order = 10,
-              width = 1.5,
-              disabled = function(_)
-                return not NS.db.arena.enabled
-              end,
-              get = function(_)
-                return NS.db.arena.attachToHealthBar
-              end,
-              set = function(_, val)
-                NS.db.arena.attachToHealthBar = val
+                NS.db.arrow.position = val
                 NS.OnDbChanged()
               end,
             },
             spacer5 = {
               name = "",
               type = "description",
-              order = 11,
-              width = "full",
+              order = 15,
+              width = 0.1,
             },
-            offsetX = {
-              name = "Offset X",
-              type = "range",
-              order = 12,
-              width = 1.2,
-              isPercent = false,
-              min = -100,
-              max = 100,
-              step = 1,
+            attachToHealthBar = {
+              name = "Attach directly to the healthbar",
+              type = "toggle",
+              order = 16,
+              width = 1.5,
               disabled = function(_)
-                return not NS.db.arena.enabled
+                return not NS.db.arrow.enabled
               end,
               get = function(_)
-                return NS.db.arena.offsetX
+                return NS.db.arrow.attachToHealthBar
               end,
               set = function(_, val)
-                NS.db.arena.offsetX = val
-                NS.OnDbChanged()
-              end,
-            },
-            offsetY = {
-              name = "Offset Y",
-              type = "range",
-              order = 13,
-              width = 1.2,
-              isPercent = false,
-              min = -100,
-              max = 100,
-              step = 1,
-              disabled = function(_)
-                return not NS.db.arena.enabled
-              end,
-              get = function(_)
-                return NS.db.arena.offsetY
-              end,
-              set = function(_, val)
-                NS.db.arena.offsetY = val
+                NS.db.arrow.attachToHealthBar = val
                 NS.OnDbChanged()
               end,
             },
             spacer6 = {
               name = "",
               type = "description",
-              order = 14,
+              order = 17,
+              width = "full",
+            },
+            offsetX = {
+              name = "Offset X",
+              type = "range",
+              order = 18,
+              width = 1.2,
+              isPercent = false,
+              min = -100,
+              max = 100,
+              step = 1,
+              disabled = function(_)
+                return not NS.db.arrow.enabled
+              end,
+              get = function(_)
+                return NS.db.arrow.offsetX
+              end,
+              set = function(_, val)
+                NS.db.arrow.offsetX = val
+                NS.OnDbChanged()
+              end,
+            },
+            offsetY = {
+              name = "Offset Y",
+              type = "range",
+              order = 19,
+              width = 1.2,
+              isPercent = false,
+              min = -100,
+              max = 100,
+              step = 1,
+              disabled = function(_)
+                return not NS.db.arrow.enabled
+              end,
+              get = function(_)
+                return NS.db.arrow.offsetY
+              end,
+              set = function(_, val)
+                NS.db.arrow.offsetY = val
+                NS.OnDbChanged()
+              end,
+            },
+            spacer7 = {
+              name = "",
+              type = "description",
+              order = 20,
               width = "full",
             },
             scale = {
               name = "Scale",
               type = "range",
-              order = 15,
+              order = 21,
               width = 1.75,
               isPercent = false,
               min = 0.5,
               max = 2,
               step = 0.01,
               disabled = function(_)
-                return not NS.db.arena.enabled
+                return not NS.db.arrow.enabled
               end,
               get = function(_)
-                return NS.db.arena.scale
+                return NS.db.arrow.scale
               end,
               set = function(_, val)
-                NS.db.arena.scale = val
+                NS.db.arrow.scale = val
                 NS.OnDbChanged()
               end,
             },
-            replaceHealerIcon = {
-              name = "Replace arena icon with healer icon for healers",
-              type = "toggle",
-              order = 16,
-              width = "full",
-              disabled = function(_)
-                return not NS.db.arena.enabled
-              end,
-              get = function(_)
-                return NS.db.arena.replaceHealerIcon
-              end,
-              set = function(_, val)
-                NS.db.arena.replaceHealerIcon = val
-                NS.OnDbChanged()
-              end,
-            },
-            icon = {
-              name = "Icon:",
-              type = "select",
-              order = 17,
-              width = 1.0,
-              values = {
-                ["arrow"] = "Arrow",
-                ["class"] = "Class",
-              },
-              sorting = {
-                "arrow",
-                "class",
-              },
-              disabled = function(_)
-                return not NS.db.arena.enabled
-              end,
-              get = function(_)
-                return NS.db.arena.icon
-              end,
-              set = function(_, val)
-                NS.db.arena.icon = val
-                NS.OnDbChanged()
-              end,
-            },
-            desc1 = {
-              name = "  (Scroll down for more options)",
+            spacer8 = {
+              name = " ",
               type = "description",
-              order = 18,
-              width = 1.0,
+              order = 22,
+              width = "full",
+            },
+            iconDesc = {
+              name = "Icon:",
+              type = "description",
+              order = 23,
+              width = "full",
             },
             iconImage = {
-              order = 19,
-              type = "description",
               name = " ",
+              type = "description",
+              order = 24,
               image = function(info)
-                local texture = ""
-                if NS.db.arena.icon == "arrow" then
-                  texture = "covenantsanctum-renown-doublearrow-depressedxatlas"
-                else
-                  texture = "covenantsanctum-renown-doublearrow-depressedxatlas"
-                end
-                return texture
+                return "covenantsanctum-renown-doublearrow-depressedxatlas"
               end,
               imageHeight = 70,
               imageWidth = 55,
             },
+          },
+        },
+        class = {
+          name = "Class",
+          type = "group",
+          order = 2,
+          args = {
+            enable = {
+              name = "Enable",
+              type = "toggle",
+              order = 1,
+              width = 0.4,
+              get = function(_)
+                return NS.db.class.enabled
+              end,
+              set = function(_, val)
+                NS.db.class.enabled = val
+                NS.OnDbChanged()
+              end,
+            },
+            spacer1 = {
+              name = "",
+              type = "description",
+              order = 2,
+              width = 0.1,
+            },
+            test = {
+              name = "Test Mode",
+              desc = "Turn on to test settings immediately",
+              type = "toggle",
+              order = 3,
+              width = 1.0,
+              disabled = function(_)
+                return not NS.db.class.enabled
+              end,
+              get = function(_)
+                return NS.db.class.test
+              end,
+              set = function(_, val)
+                NS.db.class.test = val
+                NS.OnDbChanged()
+              end,
+            },
+            spacer2 = {
+              name = "",
+              type = "description",
+              order = 4,
+              width = "full",
+            },
+            desc1 = {
+              name = "Show for:",
+              fontSize = "medium",
+              type = "description",
+              order = 5,
+              width = 0.4,
+            },
+            showFriendly = {
+              name = "Friendly",
+              type = "toggle",
+              order = 6,
+              width = 0.5,
+              disabled = function(_)
+                return not NS.db.class.enabled
+              end,
+              get = function(_)
+                return NS.db.class.showFriendly
+              end,
+              set = function(_, val)
+                NS.db.class.showFriendly = val
+                NS.OnDbChanged()
+              end,
+            },
+            showEnemy = {
+              name = "Enemy",
+              type = "toggle",
+              order = 7,
+              width = 0.4,
+              disabled = function(_)
+                return not NS.db.class.enabled
+              end,
+              get = function(_)
+                return NS.db.class.showEnemy
+              end,
+              set = function(_, val)
+                NS.db.class.showEnemy = val
+                NS.OnDbChanged()
+              end,
+            },
+            spacer3 = {
+              name = "",
+              type = "description",
+              order = 8,
+              width = "full",
+            },
+            desc2 = {
+              name = "Show in:",
+              fontSize = "medium",
+              type = "description",
+              order = 9,
+              width = 0.4,
+            },
+            showArena = {
+              name = "Arena",
+              type = "toggle",
+              order = 10,
+              width = 0.4,
+              disabled = function(_)
+                return not NS.db.class.enabled
+              end,
+              get = function(_)
+                return NS.db.class.showArena
+              end,
+              set = function(_, val)
+                NS.db.class.showArena = val
+                NS.OnDbChanged()
+              end,
+            },
+            showBattleground = {
+              name = "Battleground",
+              type = "toggle",
+              order = 11,
+              width = 0.7,
+              disabled = function(_)
+                return not NS.db.class.enabled
+              end,
+              get = function(_)
+                return NS.db.class.showBattleground
+              end,
+              set = function(_, val)
+                NS.db.class.showBattleground = val
+                NS.OnDbChanged()
+              end,
+            },
+            showOutdoors = {
+              name = "Outdoors",
+              type = "toggle",
+              order = 12,
+              width = 0.5,
+              disabled = function(_)
+                return not NS.db.class.enabled
+              end,
+              get = function(_)
+                return NS.db.class.showOutdoors
+              end,
+              set = function(_, val)
+                NS.db.class.showOutdoors = val
+                NS.OnDbChanged()
+              end,
+            },
+            spacer4 = {
+              name = "",
+              type = "description",
+              order = 13,
+              width = "full",
+            },
+            position = {
+              name = "Position",
+              type = "select",
+              order = 14,
+              width = 1.0,
+              values = {
+                ["LEFT"] = "Left",
+                ["TOP"] = "Top",
+                ["RIGHT"] = "Right",
+              },
+              sorting = {
+                "LEFT",
+                "TOP",
+                "RIGHT",
+              },
+              disabled = function(_)
+                return not NS.db.class.enabled
+              end,
+              get = function(_)
+                return NS.db.class.position
+              end,
+              set = function(_, val)
+                NS.db.class.position = val
+                NS.OnDbChanged()
+              end,
+            },
+            spacer5 = {
+              name = "",
+              type = "description",
+              order = 15,
+              width = 0.1,
+            },
+            attachToHealthBar = {
+              name = "Attach directly to the healthbar",
+              type = "toggle",
+              order = 16,
+              width = 1.5,
+              disabled = function(_)
+                return not NS.db.class.enabled
+              end,
+              get = function(_)
+                return NS.db.class.attachToHealthBar
+              end,
+              set = function(_, val)
+                NS.db.class.attachToHealthBar = val
+                NS.OnDbChanged()
+              end,
+            },
+            spacer6 = {
+              name = "",
+              type = "description",
+              order = 17,
+              width = "full",
+            },
+            offsetX = {
+              name = "Offset X",
+              type = "range",
+              order = 18,
+              width = 1.2,
+              isPercent = false,
+              min = -100,
+              max = 100,
+              step = 1,
+              disabled = function(_)
+                return not NS.db.class.enabled
+              end,
+              get = function(_)
+                return NS.db.class.offsetX
+              end,
+              set = function(_, val)
+                NS.db.class.offsetX = val
+                NS.OnDbChanged()
+              end,
+            },
+            offsetY = {
+              name = "Offset Y",
+              type = "range",
+              order = 19,
+              width = 1.2,
+              isPercent = false,
+              min = -100,
+              max = 100,
+              step = 1,
+              disabled = function(_)
+                return not NS.db.class.enabled
+              end,
+              get = function(_)
+                return NS.db.class.offsetY
+              end,
+              set = function(_, val)
+                NS.db.class.offsetY = val
+                NS.OnDbChanged()
+              end,
+            },
             spacer7 = {
               name = "",
-              fontSize = "medium",
               type = "description",
               order = 20,
               width = "full",
             },
-            desc2 = {
-              name = "The following settings are only applied while inside arena.",
-              fontSize = "medium",
-              type = "description",
+            scale = {
+              name = "Scale",
+              type = "range",
               order = 21,
-              width = 1.2,
-            },
-            showOutside = {
-              name = "Apply these settings outside arena",
-              type = "toggle",
-              order = 22,
-              width = 1.5,
+              width = 1.75,
+              isPercent = false,
+              min = 0.5,
+              max = 2,
+              step = 0.01,
               disabled = function(_)
-                return not NS.db.arena.enabled
+                return not NS.db.class.enabled
               end,
               get = function(_)
-                return NS.db.arena.showOutside
+                return NS.db.class.scale
               end,
               set = function(_, val)
-                NS.db.arena.showOutside = val
+                NS.db.class.scale = val
                 NS.OnDbChanged()
               end,
             },
-            friendly = {
-              name = "Friendly Player Nameplate Settings",
-              type = "group",
-              inline = true,
+            spacer8 = {
+              name = " ",
+              type = "description",
+              order = 22,
+              width = "full",
+            },
+            iconDesc = {
+              name = "Icon:",
+              type = "description",
               order = 23,
-              disabled = function(_)
-                return not NS.db.arena.enabled
-              end,
-              args = {
-                healthBars = {
-                  name = "Hide Friendly Player Healthbars",
-                  type = "toggle",
-                  width = 1.5,
-                  order = 1,
-                  get = function(_)
-                    return NS.db.arena.healthBars.hideFriendly
-                  end,
-                  set = function(_, val)
-                    NS.db.arena.healthBars.hideFriendly = val
-                    NS.OnDbChanged()
-                  end,
-                },
-                names = {
-                  name = "Hide Friendly Player Names",
-                  type = "toggle",
-                  width = 1.5,
-                  order = 2,
-                  get = function(_)
-                    return NS.db.arena.names.hideFriendly
-                  end,
-                  set = function(_, val)
-                    NS.db.arena.names.hideFriendly = val
-                    NS.OnDbChanged()
-                  end,
-                },
-                castBars = {
-                  name = "Hide Friendly Player Castbars",
-                  type = "toggle",
-                  width = 1.5,
-                  order = 3,
-                  get = function(_)
-                    return NS.db.arena.castBars.hideFriendly
-                  end,
-                  set = function(_, val)
-                    NS.db.arena.castBars.hideFriendly = val
-                    NS.OnDbChanged()
-                  end,
-                },
-                buffFrames = {
-                  name = "Hide Friendly Player BuffFrames",
-                  type = "toggle",
-                  width = 1.5,
-                  order = 4,
-                  get = function(_)
-                    return NS.db.arena.buffFrames.hideFriendly
-                  end,
-                  set = function(_, val)
-                    NS.db.arena.buffFrames.hideFriendly = val
-                    NS.OnDbChanged()
-                  end,
-                },
-              },
+              width = "full",
             },
-            enemy = {
-              name = "Enemy Player Nameplate Settings",
-              type = "group",
-              inline = true,
+            iconImage = {
+              name = " ",
+              type = "description",
               order = 24,
-              disabled = function(_)
-                return not NS.db.arena.enabled
+              image = function(info)
+                return "class"
               end,
-              args = {
-                healthBars = {
-                  name = "Hide Enemy Player Healthbars",
-                  type = "toggle",
-                  width = 1.5,
-                  order = 1,
-                  get = function(_)
-                    return NS.db.arena.healthBars.hideEnemy
-                  end,
-                  set = function(_, val)
-                    NS.db.arena.healthBars.hideEnemy = val
-                    NS.OnDbChanged()
-                  end,
-                },
-                names = {
-                  name = "Hide Enemy Player Names",
-                  type = "toggle",
-                  width = 1.5,
-                  order = 2,
-                  get = function(_)
-                    return NS.db.arena.names.hideEnemy
-                  end,
-                  set = function(_, val)
-                    NS.db.arena.names.hideEnemy = val
-                    NS.OnDbChanged()
-                  end,
-                },
-                castBars = {
-                  name = "Hide Enemy Player Castbars",
-                  type = "toggle",
-                  width = 1.5,
-                  order = 3,
-                  get = function(_)
-                    return NS.db.arena.castBars.hideEnemy
-                  end,
-                  set = function(_, val)
-                    NS.db.arena.castBars.hideEnemy = val
-                    NS.OnDbChanged()
-                  end,
-                },
-                buffFrames = {
-                  name = "Hide Enemy Player BuffFrames",
-                  type = "toggle",
-                  width = 1.5,
-                  order = 4,
-                  get = function(_)
-                    return NS.db.arena.buffFrames.hideEnemy
-                  end,
-                  set = function(_, val)
-                    NS.db.arena.buffFrames.hideEnemy = val
-                    NS.OnDbChanged()
-                  end,
-                },
-              },
-            },
-            npc = {
-              name = "NPC Nameplate Settings",
-              type = "group",
-              inline = true,
-              order = 25,
-              args = {
-                healthBars = {
-                  name = "Hide NPC Healthbars",
-                  type = "toggle",
-                  width = 1.5,
-                  order = 1,
-                  get = function(_)
-                    return NS.db.arena.healthBars.hideNPC
-                  end,
-                  set = function(_, val)
-                    NS.db.arena.healthBars.hideNPC = val
-                    NS.OnDbChanged()
-                  end,
-                },
-                names = {
-                  name = "Hide NPC Names",
-                  type = "toggle",
-                  width = 1.5,
-                  order = 2,
-                  get = function(_)
-                    return NS.db.arena.names.hideNPC
-                  end,
-                  set = function(_, val)
-                    NS.db.arena.names.hideNPC = val
-                    NS.OnDbChanged()
-                  end,
-                },
-                castBars = {
-                  name = "Hide NPC Castbars",
-                  type = "toggle",
-                  width = 1.5,
-                  order = 3,
-                  get = function(_)
-                    return NS.db.arena.castBars.hideNPC
-                  end,
-                  set = function(_, val)
-                    NS.db.arena.castBars.hideNPC = val
-                    NS.OnDbChanged()
-                  end,
-                },
-                buffFrames = {
-                  name = "Hide NPC BuffFrames",
-                  type = "toggle",
-                  width = 1.5,
-                  order = 4,
-                  get = function(_)
-                    return NS.db.arena.buffFrames.hideNPC
-                  end,
-                  set = function(_, val)
-                    NS.db.arena.buffFrames.hideNPC = val
-                    NS.OnDbChanged()
-                  end,
-                },
-              },
+              imageHeight = 40,
+              imageWidth = 40,
             },
           },
         },
         healer = {
           name = "Healer",
           type = "group",
-          order = 2,
+          order = 3,
           args = {
             enable = {
               name = "Enable",
@@ -620,6 +650,7 @@ local AceConfig = {
             },
             test = {
               name = "Test Mode",
+              desc = "Turn on to test settings immediately",
               type = "toggle",
               order = 3,
               width = 1.0,
@@ -640,11 +671,18 @@ local AceConfig = {
               order = 4,
               width = "full",
             },
-            showFriendly = {
-              name = "Show Friendly",
-              type = "toggle",
+            desc1 = {
+              name = "Show for:",
+              fontSize = "medium",
+              type = "description",
               order = 5,
-              width = 1.1,
+              width = 0.4,
+            },
+            showFriendly = {
+              name = "Friendly",
+              type = "toggle",
+              order = 6,
+              width = 0.5,
               disabled = function(_)
                 return not NS.db.healer.enabled
               end,
@@ -657,10 +695,10 @@ local AceConfig = {
               end,
             },
             showEnemy = {
-              name = "Show Enemy",
+              name = "Enemy",
               type = "toggle",
-              order = 6,
-              width = 1.1,
+              order = 7,
+              width = 0.4,
               disabled = function(_)
                 return not NS.db.healer.enabled
               end,
@@ -675,51 +713,74 @@ local AceConfig = {
             spacer3 = {
               name = "",
               type = "description",
-              order = 7,
+              order = 8,
               width = "full",
             },
-            groupOnly = {
-              name = "Show Only in Groups",
+            desc2 = {
+              name = "Show in:",
+              fontSize = "medium",
+              type = "description",
+              order = 9,
+              width = 0.4,
+            },
+            showArena = {
+              name = "Arena",
               type = "toggle",
-              order = 8,
-              width = 1.1,
+              order = 10,
+              width = 0.4,
               disabled = function(_)
                 return not NS.db.healer.enabled
               end,
               get = function(_)
-                return NS.db.healer.groupOnly
+                return NS.db.healer.showArena
               end,
               set = function(_, val)
-                NS.db.healer.groupOnly = val
+                NS.db.healer.showArena = val
                 NS.OnDbChanged()
               end,
             },
-            instanceOnly = {
-              name = "Show Only in Instances",
+            showBattleground = {
+              name = "Battleground",
               type = "toggle",
-              order = 9,
-              width = 1.1,
+              order = 11,
+              width = 0.7,
               disabled = function(_)
                 return not NS.db.healer.enabled
               end,
               get = function(_)
-                return NS.db.healer.instanceOnly
+                return NS.db.healer.showBattleground
               end,
               set = function(_, val)
-                NS.db.healer.instanceOnly = val
+                NS.db.healer.showBattleground = val
+                NS.OnDbChanged()
+              end,
+            },
+            showOutdoors = {
+              name = "Outdoors",
+              type = "toggle",
+              order = 12,
+              width = 0.5,
+              disabled = function(_)
+                return not NS.db.healer.enabled
+              end,
+              get = function(_)
+                return NS.db.healer.showOutdoors
+              end,
+              set = function(_, val)
+                NS.db.healer.showOutdoors = val
                 NS.OnDbChanged()
               end,
             },
             spacer4 = {
               name = "",
               type = "description",
-              order = 10,
+              order = 13,
               width = "full",
             },
             position = {
               name = "Position",
               type = "select",
-              order = 11,
+              order = 14,
               width = 1.0,
               values = {
                 ["LEFT"] = "Left",
@@ -743,13 +804,13 @@ local AceConfig = {
             spacer5 = {
               name = "",
               type = "description",
-              order = 12,
+              order = 15,
               width = 0.1,
             },
             attachToHealthBar = {
               name = "Attach directly to the healthbar",
               type = "toggle",
-              order = 13,
+              order = 16,
               width = 1.5,
               disabled = function(_)
                 return not NS.db.healer.enabled
@@ -765,14 +826,14 @@ local AceConfig = {
             spacer6 = {
               name = "",
               type = "description",
-              order = 14,
+              order = 17,
               width = "full",
             },
             scale = {
               name = "Scale",
               type = "range",
+              order = 18,
               width = 1.75,
-              order = 15,
               isPercent = false,
               min = 0.5,
               max = 2,
@@ -791,322 +852,24 @@ local AceConfig = {
             spacer7 = {
               name = " ",
               type = "description",
-              order = 16,
+              order = 19,
               width = "full",
             },
             iconDesc = {
               name = "Icon:",
               type = "description",
-              order = 17,
+              order = 20,
               width = "full",
             },
             iconImage = {
-              order = 18,
-              type = "description",
               name = " ",
+              type = "description",
+              order = 21,
               image = function(info)
                 return "roleicon-tiny-healerxatlas"
               end,
               imageHeight = 42,
               imageWidth = 42,
-            },
-          },
-        },
-        npc = {
-          name = "NPC",
-          type = "group",
-          order = 3,
-          args = {
-            spacer1 = {
-              name = "",
-              type = "description",
-              order = 1,
-              width = "full",
-            },
-            desc = {
-              name = 'The list of NPCs these settings affect can be found in the "NPC List" tab at the top.',
-              fontSize = "medium",
-              type = "description",
-              order = 2,
-              width = "full",
-            },
-            spacer2 = {
-              name = "",
-              type = "description",
-              order = 3,
-              width = "full",
-            },
-            enable = {
-              name = "Enable",
-              type = "toggle",
-              order = 4,
-              width = 0.4,
-              get = function(_)
-                return NS.db.npc.enabled
-              end,
-              set = function(_, val)
-                NS.db.npc.enabled = val
-                NS.OnDbChanged()
-              end,
-            },
-            spacer3 = {
-              name = "",
-              type = "description",
-              order = 5,
-              width = 0.1,
-            },
-            test = {
-              name = "Test Mode",
-              type = "toggle",
-              order = 6,
-              width = 1.0,
-              disabled = function(_)
-                return not NS.db.npc.enabled
-              end,
-              get = function(_)
-                return NS.db.npc.test
-              end,
-              set = function(_, val)
-                NS.db.npc.test = val
-                NS.OnDbChanged()
-              end,
-            },
-            spacer4 = {
-              name = "",
-              type = "description",
-              order = 7,
-              width = "full",
-            },
-            showFriendly = {
-              name = "Show Friendly",
-              type = "toggle",
-              order = 8,
-              width = 1.1,
-              disabled = function(_)
-                return not NS.db.npc.enabled
-              end,
-              get = function(_)
-                return NS.db.npc.showFriendly
-              end,
-              set = function(_, val)
-                NS.db.npc.showFriendly = val
-                NS.OnDbChanged()
-              end,
-            },
-            showEnemy = {
-              name = "Show Enemy",
-              type = "toggle",
-              order = 9,
-              width = 1.1,
-              disabled = function(_)
-                return not NS.db.npc.enabled
-              end,
-              get = function(_)
-                return NS.db.npc.showEnemy
-              end,
-              set = function(_, val)
-                NS.db.npc.showEnemy = val
-                NS.OnDbChanged()
-              end,
-            },
-            spacer5 = {
-              name = "",
-              type = "description",
-              order = 10,
-              width = "full",
-            },
-            groupOnly = {
-              name = "Show Only in Groups",
-              type = "toggle",
-              order = 11,
-              width = 1.1,
-              disabled = function(_)
-                return not NS.db.npc.enabled
-              end,
-              get = function(_)
-                return NS.db.npc.groupOnly
-              end,
-              set = function(_, val)
-                NS.db.npc.groupOnly = val
-                NS.OnDbChanged()
-              end,
-            },
-            instanceOnly = {
-              name = "Show Only in Instances",
-              type = "toggle",
-              order = 12,
-              width = 1.1,
-              disabled = function(_)
-                return not NS.db.npc.enabled
-              end,
-              get = function(_)
-                return NS.db.npc.instanceOnly
-              end,
-              set = function(_, val)
-                NS.db.npc.instanceOnly = val
-                NS.OnDbChanged()
-              end,
-            },
-            spacer6 = {
-              name = "",
-              type = "description",
-              order = 13,
-              width = "full",
-            },
-            position = {
-              name = "Position",
-              type = "select",
-              order = 14,
-              width = 1.0,
-              values = {
-                ["LEFT"] = "Left",
-                ["TOP"] = "Top",
-                ["RIGHT"] = "Right",
-              },
-              sorting = {
-                "LEFT",
-                "TOP",
-                "RIGHT",
-              },
-              disabled = function(_)
-                return not NS.db.npc.enabled
-              end,
-              get = function(_)
-                return NS.db.npc.position
-              end,
-              set = function(_, val)
-                NS.db.npc.position = val
-                NS.OnDbChanged()
-              end,
-            },
-            spacer7 = {
-              name = "",
-              type = "description",
-              order = 15,
-              width = 0.1,
-            },
-            attachToHealthBar = {
-              name = "Attach directly to the healthbar",
-              type = "toggle",
-              order = 16,
-              width = 1.5,
-              disabled = function(_)
-                return not NS.db.npc.enabled
-              end,
-              get = function(_)
-                return NS.db.npc.attachToHealthBar
-              end,
-              set = function(_, val)
-                NS.db.npc.attachToHealthBar = val
-                NS.OnDbChanged()
-              end,
-            },
-            spacer8 = {
-              name = "",
-              type = "description",
-              order = 17,
-              width = "full",
-            },
-            offsetX = {
-              name = "Offset X",
-              type = "range",
-              order = 18,
-              width = 1.2,
-              isPercent = false,
-              min = -100,
-              max = 100,
-              step = 1,
-              disabled = function(_)
-                return not NS.db.npc.enabled
-              end,
-              get = function(_)
-                return NS.db.npc.offsetX
-              end,
-              set = function(_, val)
-                NS.db.npc.offsetX = val
-                NS.OnDbChanged()
-              end,
-            },
-            offsetY = {
-              name = "Offset Y",
-              type = "range",
-              order = 19,
-              width = 1.2,
-              isPercent = false,
-              min = -100,
-              max = 100,
-              step = 1,
-              disabled = function(_)
-                return not NS.db.npc.enabled
-              end,
-              get = function(_)
-                return NS.db.npc.offsetY
-              end,
-              set = function(_, val)
-                NS.db.npc.offsetY = val
-                NS.OnDbChanged()
-              end,
-            },
-            spacer9 = {
-              name = "",
-              type = "description",
-              order = 20,
-              width = "full",
-            },
-            scale = {
-              name = "Scale",
-              type = "range",
-              order = 21,
-              width = 1.75,
-              isPercent = false,
-              min = 0.5,
-              max = 4,
-              step = 0.01,
-              disabled = function(_)
-                return not NS.db.npc.enabled
-              end,
-              get = function(_)
-                return NS.db.npc.scale
-              end,
-              set = function(_, val)
-                NS.db.npc.scale = val
-                NS.OnDbChanged()
-              end,
-            },
-            spacer10 = {
-              name = " ",
-              type = "description",
-              order = 22,
-              width = "full",
-            },
-            desc2 = {
-              name = "The following setting only works properly when the npcs nameplate is in view when cast.",
-              fontSize = "small",
-              type = "description",
-              order = 23,
-              width = 2.0,
-            },
-            spacer11 = {
-              name = "",
-              type = "description",
-              order = 24,
-              width = "full",
-            },
-            showCountdown = {
-              name = "Show countdown duration on icon",
-              type = "toggle",
-              order = 25,
-              width = "full",
-              disabled = function(_)
-                return not NS.db.npc.enabled
-              end,
-              get = function(_)
-                return NS.db.npc.showCountdown
-              end,
-              set = function(_, val)
-                NS.db.npc.showCountdown = val
-                NS.OnDbChanged()
-              end,
             },
           },
         },
@@ -1136,6 +899,7 @@ local AceConfig = {
             },
             test = {
               name = "Test Mode",
+              desc = "Turn on to test settings immediately",
               type = "toggle",
               order = 3,
               width = 1.0,
@@ -1163,12 +927,10 @@ local AceConfig = {
               width = 1.0,
               values = {
                 ["LEFT"] = "Left",
-                ["TOP"] = "Top",
                 ["RIGHT"] = "Right",
               },
               sorting = {
                 "LEFT",
-                "TOP",
                 "RIGHT",
               },
               disabled = function(_)
@@ -1289,9 +1051,9 @@ local AceConfig = {
               width = "full",
             },
             iconImage = {
-              order = 15,
-              type = "description",
               name = " ",
+              type = "description",
+              order = 15,
               image = function(info)
                 return "Crosshair_Quest_48xatlas"
               end,
@@ -1300,13 +1062,670 @@ local AceConfig = {
             },
           },
         },
+        npc = {
+          name = "Totems/Pets",
+          type = "group",
+          order = 5,
+          args = {
+            enable = {
+              name = "Enable",
+              type = "toggle",
+              order = 1,
+              width = 0.4,
+              get = function(_)
+                return NS.db.npc.enabled
+              end,
+              set = function(_, val)
+                NS.db.npc.enabled = val
+                NS.OnDbChanged()
+              end,
+            },
+            spacer1 = {
+              name = "",
+              type = "description",
+              order = 2,
+              width = 0.1,
+            },
+            test = {
+              name = "Test Mode",
+              desc = "Turn on to test settings immediately",
+              type = "toggle",
+              order = 3,
+              width = 1.0,
+              disabled = function(_)
+                return not NS.db.npc.enabled
+              end,
+              get = function(_)
+                return NS.db.npc.test
+              end,
+              set = function(_, val)
+                NS.db.npc.test = val
+                NS.OnDbChanged()
+              end,
+            },
+            spacer2 = {
+              name = "",
+              type = "description",
+              order = 4,
+              width = "full",
+            },
+            desc1 = {
+              name = "Show for:",
+              fontSize = "medium",
+              type = "description",
+              order = 5,
+              width = 0.4,
+            },
+            showFriendly = {
+              name = "Friendly",
+              type = "toggle",
+              order = 6,
+              width = 0.5,
+              disabled = function(_)
+                return not NS.db.npc.enabled
+              end,
+              get = function(_)
+                return NS.db.npc.showFriendly
+              end,
+              set = function(_, val)
+                NS.db.npc.showFriendly = val
+                NS.OnDbChanged()
+              end,
+            },
+            showEnemy = {
+              name = "Enemy",
+              type = "toggle",
+              order = 7,
+              width = 0.4,
+              disabled = function(_)
+                return not NS.db.npc.enabled
+              end,
+              get = function(_)
+                return NS.db.npc.showEnemy
+              end,
+              set = function(_, val)
+                NS.db.npc.showEnemy = val
+                NS.OnDbChanged()
+              end,
+            },
+            spacer3 = {
+              name = "",
+              type = "description",
+              order = 8,
+              width = "full",
+            },
+            desc2 = {
+              name = "Show in:",
+              fontSize = "medium",
+              type = "description",
+              order = 9,
+              width = 0.4,
+            },
+            showArena = {
+              name = "Arena",
+              type = "toggle",
+              order = 10,
+              width = 0.4,
+              disabled = function(_)
+                return not NS.db.npc.enabled
+              end,
+              get = function(_)
+                return NS.db.npc.showArena
+              end,
+              set = function(_, val)
+                NS.db.npc.showArena = val
+                NS.OnDbChanged()
+              end,
+            },
+            showBattleground = {
+              name = "Battleground",
+              type = "toggle",
+              order = 11,
+              width = 0.7,
+              disabled = function(_)
+                return not NS.db.npc.enabled
+              end,
+              get = function(_)
+                return NS.db.npc.showBattleground
+              end,
+              set = function(_, val)
+                NS.db.npc.showBattleground = val
+                NS.OnDbChanged()
+              end,
+            },
+            showOutdoors = {
+              name = "Outdoors",
+              type = "toggle",
+              order = 12,
+              width = 0.5,
+              disabled = function(_)
+                return not NS.db.npc.enabled
+              end,
+              get = function(_)
+                return NS.db.npc.showOutdoors
+              end,
+              set = function(_, val)
+                NS.db.npc.showOutdoors = val
+                NS.OnDbChanged()
+              end,
+            },
+            spacer4 = {
+              name = "",
+              type = "description",
+              order = 13,
+              width = "full",
+            },
+            position = {
+              name = "Position",
+              type = "select",
+              order = 14,
+              width = 1.0,
+              values = {
+                ["LEFT"] = "Left",
+                ["TOP"] = "Top",
+                ["RIGHT"] = "Right",
+              },
+              sorting = {
+                "LEFT",
+                "TOP",
+                "RIGHT",
+              },
+              disabled = function(_)
+                return not NS.db.npc.enabled
+              end,
+              get = function(_)
+                return NS.db.npc.position
+              end,
+              set = function(_, val)
+                NS.db.npc.position = val
+                NS.OnDbChanged()
+              end,
+            },
+            spacer5 = {
+              name = "",
+              type = "description",
+              order = 15,
+              width = 0.1,
+            },
+            attachToHealthBar = {
+              name = "Attach directly to the healthbar",
+              type = "toggle",
+              order = 16,
+              width = 1.5,
+              disabled = function(_)
+                return not NS.db.npc.enabled
+              end,
+              get = function(_)
+                return NS.db.npc.attachToHealthBar
+              end,
+              set = function(_, val)
+                NS.db.npc.attachToHealthBar = val
+                NS.OnDbChanged()
+              end,
+            },
+            spacer6 = {
+              name = "",
+              type = "description",
+              order = 17,
+              width = "full",
+            },
+            offsetX = {
+              name = "Offset X",
+              type = "range",
+              order = 18,
+              width = 1.2,
+              isPercent = false,
+              min = -100,
+              max = 100,
+              step = 1,
+              disabled = function(_)
+                return not NS.db.npc.enabled
+              end,
+              get = function(_)
+                return NS.db.npc.offsetX
+              end,
+              set = function(_, val)
+                NS.db.npc.offsetX = val
+                NS.OnDbChanged()
+              end,
+            },
+            offsetY = {
+              name = "Offset Y",
+              type = "range",
+              order = 19,
+              width = 1.2,
+              isPercent = false,
+              min = -100,
+              max = 100,
+              step = 1,
+              disabled = function(_)
+                return not NS.db.npc.enabled
+              end,
+              get = function(_)
+                return NS.db.npc.offsetY
+              end,
+              set = function(_, val)
+                NS.db.npc.offsetY = val
+                NS.OnDbChanged()
+              end,
+            },
+            spacer7 = {
+              name = "",
+              type = "description",
+              order = 20,
+              width = "full",
+            },
+            scale = {
+              name = "Scale",
+              type = "range",
+              order = 21,
+              width = 1.75,
+              isPercent = false,
+              min = 0.5,
+              max = 4,
+              step = 0.01,
+              disabled = function(_)
+                return not NS.db.npc.enabled
+              end,
+              get = function(_)
+                return NS.db.npc.scale
+              end,
+              set = function(_, val)
+                NS.db.npc.scale = val
+                NS.OnDbChanged()
+              end,
+            },
+            spacer8 = {
+              name = " ",
+              type = "description",
+              order = 22,
+              width = "full",
+            },
+            desc3 = {
+              name = "The following setting only works properly when the npc nameplate is in view when cast.",
+              fontSize = "small",
+              type = "description",
+              order = 23,
+              width = 1.5,
+            },
+            spacer9 = {
+              name = "",
+              type = "description",
+              order = 24,
+              width = "full",
+            },
+            showCountdown = {
+              name = "Show countdown duration on icon",
+              type = "toggle",
+              order = 25,
+              width = "full",
+              disabled = function(_)
+                return not NS.db.npc.enabled
+              end,
+              get = function(_)
+                return NS.db.npc.showCountdown
+              end,
+              set = function(_, val)
+                NS.db.npc.showCountdown = val
+                NS.OnDbChanged()
+              end,
+            },
+            iconDesc = {
+              name = "Icon:",
+              type = "description",
+              order = 26,
+              width = "full",
+            },
+            desc4 = {
+              name = 'The icon settings for NPCs can be found at the top in the "Totem/Pet List" tab.',
+              fontSize = "medium",
+              type = "description",
+              order = 27,
+              width = "full",
+            },
+          },
+        },
+      },
+    },
+    general = {
+      name = "General",
+      type = "group",
+      order = 2,
+      args = {
+        ignoreNameplateAlpha = {
+          name = "Ignore nameplate alpha",
+          type = "toggle",
+          order = 1,
+          width = "full",
+          get = function(_)
+            return NS.db.general.ignoreNameplateAlpha
+          end,
+          set = function(_, val)
+            NS.db.general.ignoreNameplateAlpha = val
+            NS.OnDbChanged()
+          end,
+        },
+        ignoreNameplateScale = {
+          name = "Ignore nameplate scale",
+          type = "toggle",
+          order = 2,
+          width = "full",
+          get = function(_)
+            return NS.db.general.ignoreNameplateScale
+          end,
+          set = function(_, val)
+            NS.db.general.ignoreNameplateScale = val
+            NS.OnDbChanged()
+          end,
+        },
+        spacer1 = {
+          name = "",
+          type = "description",
+          order = 3,
+          width = "full",
+        },
+        desc = {
+          name = "The following settings may be affected by other addons.",
+          fontSize = "small",
+          type = "description",
+          order = 4,
+          width = "full",
+        },
+        selfClickThrough = {
+          name = "Click Through Self Nameplate",
+          type = "toggle",
+          order = 5,
+          width = "full",
+          get = function(_)
+            return NS.db.general.selfClickThrough
+          end,
+          set = function(_, val)
+            NS.db.general.selfClickThrough = val
+            NS.OnDbChanged()
+          end,
+        },
+        friendlyClickThrough = {
+          name = "Click Through Friendly Nameplates",
+          type = "toggle",
+          order = 6,
+          width = "full",
+          get = function(_)
+            return NS.db.general.friendlyClickThrough
+          end,
+          set = function(_, val)
+            NS.db.general.friendlyClickThrough = val
+            NS.OnDbChanged()
+          end,
+        },
+        enemyClickThrough = {
+          name = "Click Through Enemy Nameplates",
+          type = "toggle",
+          order = 7,
+          width = "full",
+          get = function(_)
+            return NS.db.general.enemyClickThrough
+          end,
+          set = function(_, val)
+            NS.db.general.enemyClickThrough = val
+            NS.OnDbChanged()
+          end,
+        },
+      },
+    },
+    nameplates = {
+      name = "Nameplates",
+      type = "group",
+      order = 3,
+      args = {
+        desc1 = {
+          name = "Choose where to apply these settings:",
+          fontSize = "medium",
+          type = "description",
+          order = 1,
+          width = "full",
+        },
+        showArena = {
+          name = "Arena",
+          type = "toggle",
+          order = 2,
+          width = 0.4,
+          get = function(_)
+            return NS.db.arena.showArena
+          end,
+          set = function(_, val)
+            NS.db.arena.showArena = val
+            NS.OnDbChanged()
+          end,
+        },
+        showBattleground = {
+          name = "Battleground",
+          type = "toggle",
+          order = 3,
+          width = 0.7,
+          get = function(_)
+            return NS.db.arena.showBattleground
+          end,
+          set = function(_, val)
+            NS.db.arena.showBattleground = val
+            NS.OnDbChanged()
+          end,
+        },
+        showOutdoors = {
+          name = "Outdoors",
+          type = "toggle",
+          order = 4,
+          width = 0.5,
+          get = function(_)
+            return NS.db.arena.showOutdoors
+          end,
+          set = function(_, val)
+            NS.db.arena.showOutdoors = val
+            NS.OnDbChanged()
+          end,
+        },
+        friendly = {
+          name = "Friendly Player Nameplate Settings",
+          type = "group",
+          inline = true,
+          order = 5,
+          disabled = function(_)
+            return not NS.db.arena.showArena and not NS.db.arena.showBattleground and not NS.db.arena.showOutdoors
+          end,
+          args = {
+            healthBars = {
+              name = "Hide Friendly Player Healthbars",
+              type = "toggle",
+              width = 1.5,
+              order = 1,
+              get = function(_)
+                return NS.db.arena.healthBars.hideFriendly
+              end,
+              set = function(_, val)
+                NS.db.arena.healthBars.hideFriendly = val
+                NS.OnDbChanged()
+              end,
+            },
+            names = {
+              name = "Hide Friendly Player Names",
+              type = "toggle",
+              width = 1.5,
+              order = 2,
+              get = function(_)
+                return NS.db.arena.names.hideFriendly
+              end,
+              set = function(_, val)
+                NS.db.arena.names.hideFriendly = val
+                NS.OnDbChanged()
+              end,
+            },
+            castBars = {
+              name = "Hide Friendly Player Castbars",
+              type = "toggle",
+              width = 1.5,
+              order = 3,
+              get = function(_)
+                return NS.db.arena.castBars.hideFriendly
+              end,
+              set = function(_, val)
+                NS.db.arena.castBars.hideFriendly = val
+                NS.OnDbChanged()
+              end,
+            },
+            buffFrames = {
+              name = "Hide Friendly Player BuffFrames",
+              type = "toggle",
+              width = 1.5,
+              order = 4,
+              get = function(_)
+                return NS.db.arena.buffFrames.hideFriendly
+              end,
+              set = function(_, val)
+                NS.db.arena.buffFrames.hideFriendly = val
+                NS.OnDbChanged()
+              end,
+            },
+          },
+        },
+        enemy = {
+          name = "Enemy Player Nameplate Settings",
+          type = "group",
+          inline = true,
+          order = 6,
+          disabled = function(_)
+            return not NS.db.arena.showArena and not NS.db.arena.showBattleground and not NS.db.arena.showOutdoors
+          end,
+          args = {
+            healthBars = {
+              name = "Hide Enemy Player Healthbars",
+              type = "toggle",
+              width = 1.5,
+              order = 1,
+              get = function(_)
+                return NS.db.arena.healthBars.hideEnemy
+              end,
+              set = function(_, val)
+                NS.db.arena.healthBars.hideEnemy = val
+                NS.OnDbChanged()
+              end,
+            },
+            names = {
+              name = "Hide Enemy Player Names",
+              type = "toggle",
+              width = 1.5,
+              order = 2,
+              get = function(_)
+                return NS.db.arena.names.hideEnemy
+              end,
+              set = function(_, val)
+                NS.db.arena.names.hideEnemy = val
+                NS.OnDbChanged()
+              end,
+            },
+            castBars = {
+              name = "Hide Enemy Player Castbars",
+              type = "toggle",
+              width = 1.5,
+              order = 3,
+              get = function(_)
+                return NS.db.arena.castBars.hideEnemy
+              end,
+              set = function(_, val)
+                NS.db.arena.castBars.hideEnemy = val
+                NS.OnDbChanged()
+              end,
+            },
+            buffFrames = {
+              name = "Hide Enemy Player BuffFrames",
+              type = "toggle",
+              width = 1.5,
+              order = 4,
+              get = function(_)
+                return NS.db.arena.buffFrames.hideEnemy
+              end,
+              set = function(_, val)
+                NS.db.arena.buffFrames.hideEnemy = val
+                NS.OnDbChanged()
+              end,
+            },
+          },
+        },
+        npc = {
+          name = "NPC Nameplate Settings",
+          type = "group",
+          inline = true,
+          order = 7,
+          disabled = function(_)
+            return not NS.db.arena.showArena and not NS.db.arena.showBattleground and not NS.db.arena.showOutdoors
+          end,
+          args = {
+            healthBars = {
+              name = "Hide NPC Healthbars",
+              type = "toggle",
+              width = 1.5,
+              order = 1,
+              get = function(_)
+                return NS.db.arena.healthBars.hideNPC
+              end,
+              set = function(_, val)
+                NS.db.arena.healthBars.hideNPC = val
+                NS.OnDbChanged()
+              end,
+            },
+            names = {
+              name = "Hide NPC Names",
+              type = "toggle",
+              width = 1.5,
+              order = 2,
+              get = function(_)
+                return NS.db.arena.names.hideNPC
+              end,
+              set = function(_, val)
+                NS.db.arena.names.hideNPC = val
+                NS.OnDbChanged()
+              end,
+            },
+            castBars = {
+              name = "Hide NPC Castbars",
+              type = "toggle",
+              width = 1.5,
+              order = 3,
+              get = function(_)
+                return NS.db.arena.castBars.hideNPC
+              end,
+              set = function(_, val)
+                NS.db.arena.castBars.hideNPC = val
+                NS.OnDbChanged()
+              end,
+            },
+            buffFrames = {
+              name = "Hide NPC BuffFrames",
+              type = "toggle",
+              width = 1.5,
+              order = 4,
+              get = function(_)
+                return NS.db.arena.buffFrames.hideNPC
+              end,
+              set = function(_, val)
+                NS.db.arena.buffFrames.hideNPC = val
+                NS.OnDbChanged()
+              end,
+            },
+          },
+        },
+        desc = {
+          name = "These settings may be affected by other addons.",
+          fontSize = "small",
+          type = "description",
+          order = 8,
+          width = "full",
+        },
       },
     },
     npcs = {
-      name = "NPC List",
+      name = "Totem/Pet List",
       type = "group",
       childGroups = "tree",
-      order = 3,
+      order = 4,
       args = {
         title = {
           name = "If you want to add to this list message me on discord.",
@@ -1340,9 +1759,10 @@ local AceConfig = {
       },
     },
     profiles = {
-      type = "group",
       name = "Profiles",
+      type = "group",
       desc = "Manage Profiles",
+      order = 5,
       args = {
         desc = {
           order = 1,
@@ -1371,7 +1791,7 @@ local AceConfig = {
               .. info.handler:GetCurrentProfile()
               .. FONT_COLOR_CODE_CLOSE
           end,
-          width = "default",
+          width = 2.0,
         },
         choosedesc = {
           order = 20,
@@ -1432,10 +1852,67 @@ local AceConfig = {
         },
       },
     },
+    share = {
+      name = "Import/Export",
+      type = "group",
+      desc = "Import/Export Profiles",
+      order = 6,
+      args = {
+        descimp = {
+          name = "Import any valid export string created from someone elses NameplateIcons profile.\n",
+          type = "description",
+          order = 1,
+        },
+        descexp = {
+          name = "Export any of your profiles to share with anyone for use in their NameplateIcons.",
+          type = "description",
+          order = 2,
+        },
+        export = {
+          name = "Export Profile",
+          desc = "Export the active profile into an importable string",
+          type = "execute",
+          order = 3,
+          width = 1.0,
+          func = function()
+            NS:ShowExport()
+          end,
+        },
+        current = {
+          name = function(info)
+            return "Current Profile:"
+              .. " "
+              .. NORMAL_FONT_COLOR_CODE
+              .. NameplateIconsDB.profileKeys[NS.CHAR_NAME]
+              .. FONT_COLOR_CODE_CLOSE
+          end,
+          type = "description",
+          order = 4,
+          width = 2.0,
+        },
+        spacer1 = {
+          name = "",
+          type = "description",
+          order = 5,
+          width = "full",
+        },
+        import = {
+          name = "Import Profile",
+          desc = "Import an exported NameplateIcons profile string",
+          type = "execute",
+          order = 6,
+          width = 1.0,
+          func = function()
+            NS:ShowImport()
+          end,
+        },
+      },
+    },
   },
 }
 NS.AceConfig = AceConfig
 
+--- @type fun(npcId: string, npcInfo: MyNPCInfo, index: integer)
 NS.MakeOption = function(npcId, npcInfo, index)
   local npcName = npcInfo.name
   local npcIcon = npcInfo.icon
@@ -1462,7 +1939,7 @@ NS.MakeOption = function(npcId, npcInfo, index)
         order = 1,
         width = "full",
         get = function(info)
-          return NS.db[info[1]][info[2]][info[3]]
+          return NS.db[info[1]][info[2]] and NS.db[info[1]][info[2]][info[3]] or npcInfo.enabled
         end,
         set = function(info, value)
           if value then
@@ -1486,7 +1963,7 @@ NS.MakeOption = function(npcId, npcInfo, index)
           return not NS.db[info[1]][info[2]].enabled
         end,
         get = function(info)
-          return NS.db[info[1]][info[2]][info[3]]
+          return NS.db[info[1]][info[2]] and NS.db[info[1]][info[2]][info[3]] or npcInfo.enableGlow
         end,
         set = function(info, value)
           NS.db[info[1]][info[2]][info[3]] = value
@@ -1514,7 +1991,7 @@ NS.MakeOption = function(npcId, npcInfo, index)
           return not NS.db[info[1]][info[2]].enabled or not NS.db[info[1]][info[2]].enableGlow
         end,
         get = function(info)
-          return NS.db[info[1]][info[2]][info[3]]
+          return NS.db[info[1]][info[2]] and NS.db[info[1]][info[2]][info[3]] or true
         end,
         set = function(info, value)
           NS.db[info[1]][info[2]][info[3]] = value
@@ -1530,7 +2007,7 @@ NS.MakeOption = function(npcId, npcInfo, index)
           return not NS.db[info[1]][info[2]].enabled or not NS.db[info[1]][info[2]].enableGlow
         end,
         get = function(info)
-          return NS.db[info[1]][info[2]][info[3]]
+          return NS.db[info[1]][info[2]] and NS.db[info[1]][info[2]][info[3]] or true
         end,
         set = function(info, value)
           NS.db[info[1]][info[2]][info[3]] = value
@@ -1547,10 +2024,8 @@ NS.MakeOption = function(npcId, npcInfo, index)
           return not NS.db[info[1]][info[2]].enabled or not NS.db[info[1]][info[2]].enableGlow
         end,
         get = function(info)
-          return NS.db[info[1]][info[2]][info[3]][1],
-            NS.db[info[1]][info[2]][info[3]][2],
-            NS.db[info[1]][info[2]][info[3]][3],
-            NS.db[info[1]][info[2]][info[3]][4]
+          local glow = NS.db[info[1]][info[2]] and NS.db[info[1]][info[2]][info[3]] or npcGlow
+          return glow[1], glow[2], glow[3], glow[4]
         end,
         set = function(info, val1, val2, val3, val4)
           NS.db[info[1]][info[2]][info[3]][1] = val1
@@ -1593,8 +2068,12 @@ NS.MakeOption = function(npcId, npcInfo, index)
 end
 
 NS.BuildOptions = function()
+  --- @type { [string]: MyNPCInfo }[]
   local buildList = {}
+  ---@param npcId string
+  ---@param npcInfo MyNPCInfo
   for npcId, npcInfo in pairs(NS.db.npcs) do
+    --- @type { [string]: MyNPCInfo }
     local npc = {
       [npcId] = npcInfo,
     }
@@ -1602,8 +2081,10 @@ NS.BuildOptions = function()
   end
   tsort(buildList, NS.SortListByName)
   for i = 1, #buildList do
+    --- @type { [string]: MyNPCInfo }
     local spell = buildList[i]
     if spell then
+      --- @type string, MyNPCInfo
       local spellId, spellInfo = next(spell)
       NS.MakeOption(spellId, spellInfo, i)
     end

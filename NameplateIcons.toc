@@ -1,4 +1,4 @@
-## Interface: 110005
+## Interface: 110007
 ## Title: NameplateIcons
 ## Version: 1.0.0
 ## Author: RBGDEV

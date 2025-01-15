@@ -17,8 +17,39 @@ local CreateFrame, UIParent = CreateFrame, UIParent
 --[[-----------------------------------------------------------------------------
 Support functions
 -------------------------------------------------------------------------------]]
+---
+
+local function GetClassIcon(unit)
+  local _, classFilename = UnitClass(unit)
+  local _, fallbackFilename = UnitClass("player")
+  local start = "interface/icons/classicon_"
+  local middle = classFilename and classFilename:lower() or fallbackFilename:lower()
+  local ending = ".blp"
+  return start .. middle .. ending
+end
+
+local function GetClassCoords(unit)
+  local _, class = UnitClass(unit)
+  local coords = CLASS_ICON_TCOORDS[class]
+  return coords
+end
+
+local function GetClassColor(unit)
+  local _, class = UnitClass(unit)
+  local colors = RAID_CLASS_COLORS[class]
+  if (UnitIsPlayer(unit) or UnitTreatAsPlayerForDisplay(unit)) and colors then
+    return colors.r, colors.g, colors.b, 1.0
+  else
+    local resultR, resultG, resultB, resultA = UnitSelectionColor(unit, true)
+    return resultR, resultG, resultB, resultA
+  end
+end
 
 local function ParseTextureString(input)
+  if input == "class" then
+    return "class", false
+  end
+
   local _texture, isAtlas = input:match("([^x]+)x([^x]+)")
   if isAtlas and isAtlas == "atlas" then
     return _texture, isAtlas
@@ -27,14 +58,12 @@ local function ParseTextureString(input)
   -- Split the string into texture and RGBA parts
   local texture, rgba, glowEnabled = input:match("([^x]+)x([^x]+)x([^x]+)")
   if not texture or not rgba or not glowEnabled then
-    print("Invalid input format!")
     return nil, nil, nil, nil, nil, nil
   end
 
   -- Convert RGBA values from the second part
   local r, g, b, a = rgba:match("(%d*%.?%d+),(%d*%.?%d+),(%d*%.?%d+),(%d*%.?%d+)")
   if not r or not g or not b or not a then
-    print("Invalid RGBA format!")
     return nil, nil, nil, nil, nil, nil
   end
 
@@ -44,7 +73,7 @@ local function ParseTextureString(input)
   return tonumber(texture), tonumber(r), tonumber(g), tonumber(b), tonumber(a), showGlow
 end
 
-local function GetTexCoord(region, texWidth, aspectRatio, xOffset, yOffset)
+local function GetTextureCoord(region, texWidth, aspectRatio, xOffset, yOffset)
   region.currentCoord = region.currentCoord or {}
   local usesMasque = false
   if not usesMasque then
@@ -95,8 +124,8 @@ local function UpdateImageAnchor(self)
       end
     else
       local offset = {
-        x = self.icon and 30 or 0,
-        y = self.icon and -25 or 0,
+        x = self.npc == true and 30 or 0,
+        y = self.npc == true and -25 or 0,
       }
       -- image on the left
       image:SetPoint("TOPLEFT", frame, "TOPLEFT", offset.x, offset.y)
@@ -163,6 +192,31 @@ local function CreateGlow(owner, texture)
   owner.icon = icon
 end
 
+local function CreateMask(owner)
+  if not owner.mask then
+    local iconSize = owner.image:GetWidth()
+    local newIconSize = iconSize * 2
+
+    local mask = owner.frame:CreateMaskTexture()
+    mask:SetTexture("Interface/Masks/CircleMaskScalable")
+    mask:SetSize(newIconSize, newIconSize)
+    mask:SetAllPoints(owner.image)
+
+    local border = owner.frame:CreateTexture(nil, "OVERLAY")
+    border:SetAtlas("ui-frame-genericplayerchoice-portrait-border")
+    border:SetBlendMode("BLEND")
+    border:SetDesaturated(true)
+    local offsetMultiplier = 0 -- 0.25
+    local widthOffset = newIconSize * offsetMultiplier
+    local heightOffset = (newIconSize + 1) * offsetMultiplier
+    border:SetPoint("TOPLEFT", owner.frame, "TOPLEFT", -widthOffset, widthOffset)
+    border:SetPoint("BOTTOMRIGHT", owner.frame, "BOTTOMRIGHT", heightOffset, -heightOffset)
+
+    owner.mask = mask
+    owner.border = border
+  end
+end
+
 --[[-----------------------------------------------------------------------------
 Methods
 -------------------------------------------------------------------------------]]
@@ -212,6 +266,10 @@ local methods = {
       if texture then
         if isAtlas and isAtlas == "atlas" then
           image:SetAtlas(texture)
+        elseif texture == "class" then
+          -- image:SetTexture("Interface/GLUES/CHARACTERCREATE/UI-CHARACTERCREATE-CLASSES")
+          local texturePath = GetClassIcon("player")
+          image:SetTexture(texturePath)
         else
           image:SetTexture(texture)
         end
@@ -225,31 +283,96 @@ local methods = {
 
       local texture, r, g, b, a, showGlow = ParseTextureString(path)
 
-      if r ~= "atlas" then
-        CreateGlow(self, texture)
+      self.isAtlas = r == "atlas"
 
-        if self.icon then
-          self.icon.glowTexture:SetAtlas("clickcast-highlight-spellbook")
+      CreateMask(self)
+
+      if r ~= "atlas" then
+        image:SetDesaturated(false)
+
+        local degrees = 0
+        local radians = math.rad(degrees)
+        image:SetRotation(radians)
+
+        if texture == "class" then
+          self.npc = false
+
+          local zoom = 0
+          local texWidth = 1 - 0.5 * zoom
+          local ulx, uly, llx, lly, urx, ury, lrx, lry = GetTextureCoord(image, texWidth, 1, 0, 0)
+          image:SetTexCoord(ulx, uly, llx, lly, urx, ury, lrx, lry)
+
+          local count = image:GetNumMaskTextures()
+
+          image:SetVertexColor(1, 1, 1, 1)
+
+          if self.mask then
+            if count == 0 then
+              image:AddMaskTexture(self.mask)
+            end
+          end
+
+          if self.border then
+            local _r, _g, _b, _a = GetClassColor("player")
+            if _r and _g and _b and _a then
+              self.border:SetVertexColor(_r, _g, _b, _a)
+            end
+            self.border:SetAllPoints(image)
+            self.border:SetAlpha(1)
+          end
+        else
+          self.npc = true
+
+          CreateGlow(self, texture)
+
+          if self.mask then
+            image:RemoveMaskTexture(self.mask)
+          end
+          if self.border then
+            self.border:ClearAllPoints()
+            self.border:SetVertexColor(1, 1, 1, 0)
+            self.border:SetAlpha(0)
+          end
 
           local zoom = 0.20
           local texWidth = 1 - 0.5 * zoom
-          local ulx, uly, llx, lly, urx, ury, lrx, lry = GetTexCoord(image, texWidth, 1, 0, 0)
+          local ulx, uly, llx, lly, urx, ury, lrx, lry = GetTextureCoord(image, texWidth, 1, 0, 0)
           image:SetTexCoord(ulx, uly, llx, lly, urx, ury, lrx, lry)
 
-          if r and g and b and a then
-            self.icon.glowTexture:SetVertexColor(r, g, b, a)
-          end
+          if self.icon then
+            self.icon.glowTexture:SetAtlas("clickcast-highlight-spellbook")
 
-          self.icon.glowTexture:SetAlpha(showGlow and 1 or 0)
+            if r and g and b and a then
+              self.icon.glowTexture:SetVertexColor(r, g, b, a)
+            end
 
-          if showGlow then
-            self.icon.glow:Show()
-          else
-            self.icon.glow:Hide()
+            self.icon.glowTexture:SetAlpha(showGlow and 1 or 0)
+
+            if showGlow then
+              self.icon.glow:Show()
+            else
+              self.icon.glow:Hide()
+            end
           end
         end
       else
+        self.npc = false
+
+        if self.icon then
+          self.icon.glow:Hide()
+        end
+
+        if self.mask then
+          image:RemoveMaskTexture(self.mask)
+        end
+        if self.border then
+          self.border:ClearAllPoints()
+          self.border:SetVertexColor(1, 1, 1, 0)
+          self.border:SetAlpha(0)
+        end
+
         if texture == "covenantsanctum-renown-doublearrow-depressed" then
+          image:SetBlendMode("BLEND")
           image:SetDesaturated(true)
           local _, class = UnitClass("player")
           local colors = RAID_CLASS_COLORS[class]
@@ -257,14 +380,18 @@ local methods = {
           local degrees = 90
           local radians = math.rad(degrees)
           image:SetRotation(radians)
-        elseif texture == "Crosshair_Quest_48" then
-          image:SetBlendMode("BLEND")
+        else
           image:SetDesaturated(false)
           image:SetVertexColor(1, 1, 1, 1)
           local degrees = 0
           local radians = math.rad(degrees)
           image:SetRotation(radians)
         end
+
+        local zoom = 0
+        local texWidth = 1 - 0.5 * zoom
+        local ulx, uly, llx, lly, urx, ury, lrx, lry = GetTextureCoord(image, texWidth, 1, 0, 0)
+        image:SetTexCoord(ulx, uly, llx, lly, urx, ury, lrx, lry)
       end
     else
       self.imageshown = nil

@@ -1,4 +1,4 @@
-local _, NS = ...
+local AddonName, NS = ...
 
 local type = type
 local error = error
@@ -7,6 +7,11 @@ local UnitName = UnitName
 local GetRealmName = GetRealmName
 local next = next
 local rawget = rawget
+local UnitClass = UnitClass
+
+local AceGUI = LibStub("AceGUI-4.0")
+local AceSerializer = LibStub("AceSerializer-4.0")
+local AceConfigRegistry = LibStub("AceConfigRegistry-4.0")
 
 local ProfilesFrame = {}
 ProfilesFrame.optionTables = ProfilesFrame.optionTables or {}
@@ -283,4 +288,147 @@ NS.getOptionsHandler = function(db, noDefaultProfiles)
   ProfilesFrame.handlers[db] = handler
 
   return handler
+end
+
+-- Export
+local export = AceGUI:Create("Frame")
+export:SetWidth(550)
+export:EnableResize(false)
+export:SetStatusText("")
+export:SetLayout("Flow")
+export:SetTitle("Export")
+export:SetStatusText("Copy this code to share the active NameplateIcons profile.")
+export:Hide()
+
+local exportEditBox = AceGUI:Create("MultiLineEditBox")
+exportEditBox:SetLabel("")
+exportEditBox:SetNumLines(29)
+exportEditBox:SetText("")
+exportEditBox:SetFullWidth(true)
+exportEditBox:SetWidth(500)
+exportEditBox.button:Hide()
+exportEditBox.frame:SetClipsChildren(true)
+export:AddChild(exportEditBox)
+export.editBox = exportEditBox
+
+NS.export = export
+
+-- Import
+local import = AceGUI:Create("Frame")
+import:SetWidth(550)
+import:EnableResize(false)
+import:SetStatusText("")
+import:SetLayout("Flow")
+import:SetTitle("Import")
+import:Hide()
+
+local importEditBox = AceGUI:Create("MultiLineEditBox")
+importEditBox:SetLabel("")
+importEditBox:SetNumLines(25)
+importEditBox:SetText("")
+importEditBox:SetFullWidth(true)
+importEditBox:SetWidth(500)
+importEditBox.button:Hide()
+importEditBox.frame:SetClipsChildren(true)
+import:AddChild(importEditBox)
+import.editBox = importEditBox
+
+local importButton = AceGUI:Create("Button")
+importButton:SetWidth(100)
+importButton:SetText("Import")
+importButton:SetCallback("OnClick", function()
+  local data = import.data
+  if not data then
+    return
+  end
+  if NS.ImportProfile(data) then
+    import:Hide()
+  end
+end)
+import:AddChild(importButton)
+import.button = importButton
+importEditBox:SetCallback("OnTextChanged", function(widget)
+  local data = NS.Decode(widget:GetText())
+  if not data then
+    return
+  end
+  import.statustext:SetTextColor(0, 1, 0)
+  import:SetStatusText("Ready to import")
+  importButton:SetDisabled(false)
+  import.data = data
+end)
+
+NS.import = import
+
+NS.ImportError = function(message)
+  if (not message) or NS.import.editBox.editBox:GetNumLetters() == 0 then
+    NS.import.statustext:SetTextColor(1, 0.82, 0)
+    NS.import:SetStatusText("Paste a code to import an NameplateIcons profile.")
+  else
+    NS.import.statustext:SetTextColor(1, 0, 0)
+    NS.import:SetStatusText(("Import failed (%s)"):format(message))
+  end
+  NS.import.button:SetDisabled(true)
+end
+
+NS.Decode = function(encoded)
+  local LibDeflate = LibStub:GetLibrary("LibDeflate")
+  local decoded = LibDeflate:DecodeForPrint(encoded)
+  if not decoded then
+    return NS.ImportError("DecodeForPrint")
+  end
+  local decompressed = LibDeflate:DecompressZlib(decoded)
+  if not decompressed then
+    return NS.ImportError("DecompressZlib")
+  end
+  local success, deserialized = AceSerializer:Deserialize(decompressed)
+  if not success then
+    return NS.ImportError("Deserialize")
+  end
+  return deserialized
+end
+
+NS.ExportProfile = function()
+  local LibDeflate = LibStub:GetLibrary("LibDeflate")
+  local data = {
+    key = NS.activeProfile,
+    profile = NameplateIconsDB.profiles[NS.activeProfile],
+  }
+  local serialized = AceSerializer:Serialize(data)
+  if not serialized then
+    return
+  end
+  local compressed = LibDeflate:CompressZlib(serialized)
+  if not compressed then
+    return
+  end
+  return LibDeflate:EncodeForPrint(compressed)
+end
+
+NS.ImportProfile = function(data)
+  local profile = ("Imported (%s)"):format(data.key)
+
+  NameplateIconsDB.profiles[profile] = data.profile
+  DBObjectLib:SetProfile(profile)
+
+  NS.OnDbChanged()
+  AceConfigRegistry:NotifyChange(AddonName)
+
+  return true
+end
+
+NS.ShowExport = function()
+  NS.export.editBox:SetText(NS.ExportProfile())
+  NS.export:Show()
+  NS.export.editBox:SetFocus()
+  NS.export.editBox:HighlightText()
+  -- NS.export.editBox:HighlightText(0, NS.export.editBox.editBox:GetNumLetters())
+end
+
+NS.ShowImport = function()
+  NS.import.editBox:SetText("")
+  NS.ImportError()
+  NS.import:Show()
+  NS.import.button:SetDisabled(true)
+  NS.import.editBox:SetFocus()
 end

@@ -6,7 +6,7 @@ local IsInInstance = IsInInstance
 local UnitIsUnit = UnitIsUnit
 local UnitIsPlayer = UnitIsPlayer
 local UnitIsFriend = UnitIsFriend
--- local UnitIsEnemy = UnitIsEnemy
+local UnitIsEnemy = UnitIsEnemy
 -- local UnitCanAttack = UnitCanAttack
 -- local UnitHealth = UnitHealth
 local UnitClass = UnitClass
@@ -25,13 +25,16 @@ local ipairs = ipairs
 local LibStub = LibStub
 local CombatLogGetCurrentEventInfo = CombatLogGetCurrentEventInfo
 local next = next
+local GetTime = GetTime
+local UnitPvpClassification = UnitPvpClassification
+local GetRaidTargetIndex = GetRaidTargetIndex
+local unpack = unpack
 
 local ssplit = string.split
 local sfind = string.find
 local smatch = string.match
 local bband = bit.band
 local mrad = math.rad
--- local mceil = math.ceil
 
 local IsAddOnLoaded = C_AddOns.IsAddOnLoaded
 local GetNamePlateForUnit = C_NamePlate.GetNamePlateForUnit
@@ -39,6 +42,10 @@ local GetNamePlates = C_NamePlate.GetNamePlates
 local After = C_Timer.After
 local GetUnitTooltip = C_TooltipInfo.GetUnit
 -- local GUIDIsPlayer = C_PlayerInfo.GUIDIsPlayer
+local SetNamePlateSelfClickThrough = C_NamePlate.SetNamePlateSelfClickThrough
+local SetNamePlateFriendlyClickThrough = C_NamePlate.SetNamePlateFriendlyClickThrough
+local SetNamePlateEnemyClickThrough = C_NamePlate.SetNamePlateEnemyClickThrough
+local SetCVar = C_CVar.SetCVar
 
 local COMBATLOG_OBJECT_TYPE_PLAYER = COMBATLOG_OBJECT_TYPE_PLAYER
 
@@ -47,6 +54,9 @@ local AceConfigDialog = LibStub("AceConfigDialog-4.0")
 
 local NameplateIcons = NS.NameplateIcons
 local NameplateIconsFrame = NS.NameplateIcons.frame
+NameplateIconsFrame.isArena = false
+NameplateIconsFrame.inBattleground = false
+NameplateIconsFrame.isOutdoors = false
 local Quest = NS.Quest
 
 local Healers = {}
@@ -130,9 +140,6 @@ local HEALER_SPELLS = {
 
 local activeNPCs = {}
 
--- https://warcraft.wiki.gg/wiki/API_UnitPvpClassification
--- local classification = UnitPvpClassification(unit)
-
 local function GetUnitFrame(nameplate)
   return nameplate.UnitFrame
 end
@@ -206,6 +213,8 @@ end
 local function instanceCheck()
   local inInstance, instanceType = IsInInstance()
   NameplateIconsFrame.inArena = inInstance and (instanceType == "arena")
+  NameplateIconsFrame.inBattleground = inInstance and (instanceType == "pvp")
+  NameplateIconsFrame.isOutdoors = not inInstance and (instanceType == "none")
 end
 
 local function hideBuffFrames(nameplate, guid)
@@ -220,23 +229,34 @@ local function hideBuffFrames(nameplate, guid)
   local isFriend = UnitIsFriend("player", unit)
   local isEnemy = UnitIsEnemy("player", unit)
   local isArena = NameplateIconsFrame.inArena
+  local isBattleground = NameplateIconsFrame.inBattleground
+  local isOutdoors = NameplateIconsFrame.isOutdoors
 
   local hideFriendly = NS.db.arena.buffFrames.hideFriendly and (isFriend and isPlayer)
   local hideEnemy = NS.db.arena.buffFrames.hideEnemy and (isEnemy and isPlayer)
   local hideNPC = NS.db.arena.buffFrames.hideNPC and isNPC
-  local dontRunOutside = not NS.db.arena.showOutside and not isArena
-  local notTestMode = not NS.db.arena.test
-  local hideBuffFrame = notTestMode and (hideFriendly or hideEnemy or hideNPC)
+  local hideBuffFrame = hideFriendly or hideEnemy or hideNPC
+  local hideOutsideArena = not NS.db.arena.showArena and isArena
+  local hideOutsideBattleground = not NS.db.arena.showBattleground and isBattleground
+  local hideOutside = not NS.db.arena.showOutdoors and isOutdoors
+  local hideLocation = true
+  if isArena then
+    hideLocation = hideOutsideArena
+  elseif isBattleground then
+    hideLocation = hideOutsideBattleground
+  elseif isOutdoors then
+    hideLocation = hideOutside
+  end
 
-  if notTestMode and dontRunOutside then
+  if hideLocation then
     nameplate.UnitFrame.BuffFrame:SetAlpha(1)
     return
   end
 
   if hideBuffFrame then
     nameplate.UnitFrame.BuffFrame:SetAlpha(0)
-    -- else
-    --   nameplate.UnitFrame.BuffFrame:SetAlpha(1)
+  else
+    nameplate.UnitFrame.BuffFrame:SetAlpha(1)
   end
 end
 
@@ -252,15 +272,26 @@ local function hideCastBars(nameplate, guid)
   local isFriend = UnitIsFriend("player", unit)
   local isEnemy = UnitIsEnemy("player", unit)
   local isArena = NameplateIconsFrame.inArena
+  local isBattleground = NameplateIconsFrame.inBattleground
+  local isOutdoors = NameplateIconsFrame.isOutdoors
 
   local hideFriendly = NS.db.arena.castBars.hideFriendly and (isFriend and isPlayer)
   local hideEnemy = NS.db.arena.castBars.hideEnemy and (isEnemy and isPlayer)
   local hideNPC = NS.db.arena.castBars.hideNPC and isNPC
-  local dontRunOutside = not NS.db.arena.showOutside and not isArena
-  local notTestMode = not NS.db.arena.test
-  local hideCastBar = notTestMode and (hideFriendly or hideEnemy or hideNPC)
+  local hideCastBar = hideFriendly or hideEnemy or hideNPC
+  local hideOutsideArena = not NS.db.arena.showArena and isArena
+  local hideOutsideBattleground = not NS.db.arena.showBattleground and isBattleground
+  local hideOutside = not NS.db.arena.showOutdoors and isOutdoors
+  local hideLocation = true
+  if isArena then
+    hideLocation = hideOutsideArena
+  elseif isBattleground then
+    hideLocation = hideOutsideBattleground
+  elseif isOutdoors then
+    hideLocation = hideOutside
+  end
 
-  if notTestMode and dontRunOutside then
+  if hideLocation then
     -- nameplate.UnitFrame.castBar:Show()
     return
   end
@@ -284,23 +315,34 @@ local function hideNames(nameplate, guid)
   local isFriend = UnitIsFriend("player", unit)
   local isEnemy = UnitIsEnemy("player", unit)
   local isArena = NameplateIconsFrame.inArena
+  local isBattleground = NameplateIconsFrame.inBattleground
+  local isOutdoors = NameplateIconsFrame.isOutdoors
 
   local hideFriendly = NS.db.arena.names.hideFriendly and (isFriend and isPlayer)
   local hideEnemy = NS.db.arena.names.hideEnemy and (isEnemy and isPlayer)
   local hideNPC = NS.db.arena.names.hideNPC and isNPC
-  local dontRunOutside = not NS.db.arena.showOutside and not isArena
-  local notTestMode = not NS.db.arena.test
-  local hideName = notTestMode and (hideFriendly or hideEnemy or hideNPC)
+  local hideName = hideFriendly or hideEnemy or hideNPC
+  local hideOutsideArena = not NS.db.arena.showArena and isArena
+  local hideOutsideBattleground = not NS.db.arena.showBattleground and isBattleground
+  local hideOutside = not NS.db.arena.showOutdoors and isOutdoors
+  local hideLocation = true
+  if isArena then
+    hideLocation = hideOutsideArena
+  elseif isBattleground then
+    hideLocation = hideOutsideBattleground
+  elseif isOutdoors then
+    hideLocation = hideOutside
+  end
 
-  if notTestMode and dontRunOutside then
+  if hideLocation then
     nameplate.UnitFrame.name:SetAlpha(1)
     return
   end
 
   if hideName then
     nameplate.UnitFrame.name:SetAlpha(0)
-    -- else
-    --   nameplate.UnitFrame.name:SetAlpha(1)
+  else
+    nameplate.UnitFrame.name:SetAlpha(1)
   end
 end
 
@@ -316,20 +358,29 @@ local function hideHealthBars(nameplate, guid)
   local isFriend = UnitIsFriend("player", unit)
   local isEnemy = UnitIsEnemy("player", unit)
   local isArena = NameplateIconsFrame.inArena
+  local isBattleground = NameplateIconsFrame.inBattleground
+  local isOutdoors = NameplateIconsFrame.isOutdoors
 
   local hideFriendly = NS.db.arena.healthBars.hideFriendly and (isFriend and isPlayer)
   local hideEnemy = NS.db.arena.healthBars.hideEnemy and (isEnemy and isPlayer)
   local hideNPC = NS.db.arena.healthBars.hideNPC and isNPC
-  local hideArena = not NS.db.arena.showOutside and not isArena
-  local hideTestMode = not NS.db.arena.test
-  local hideHealthBar = hideTestMode and (hideFriendly or hideEnemy or hideNPC)
+  local hideHealthBar = hideFriendly or hideEnemy or hideNPC
+  local hideOutsideArena = not NS.db.arena.showArena and isArena
+  local hideOutsideBattleground = not NS.db.arena.showBattleground and isBattleground
+  local hideOutside = not NS.db.arena.showOutdoors and isOutdoors
+  local hideLocation = true
+  if isArena then
+    hideLocation = hideOutsideArena
+  elseif isBattleground then
+    hideLocation = hideOutsideBattleground
+  elseif isOutdoors then
+    hideLocation = hideOutside
+  end
 
-  if hideTestMode then
-    if hideArena then
-      nameplate.UnitFrame.HealthBarsContainer:SetAlpha(1)
-      nameplate.UnitFrame.selectionHighlight:SetAlpha(0.25)
-      return
-    end
+  if hideLocation then
+    nameplate.UnitFrame.HealthBarsContainer:SetAlpha(1)
+    nameplate.UnitFrame.selectionHighlight:SetAlpha(0.25)
+    return
   end
 
   if hideHealthBar then
@@ -341,11 +392,41 @@ local function hideHealthBars(nameplate, guid)
   end
 end
 
-local iconSize = 16
-local zoom = 0.20
-local textureWidth = 1 - 0.5 * zoom
+local function GetClassIcon(unit)
+  local _, classFilename = UnitClass(unit)
+  local _, fallbackFilename = UnitClass("player")
+  local start = "interface/icons/classicon_"
+  local middle = classFilename and classFilename:lower() or fallbackFilename:lower()
+  local ending = ".blp"
+  return start .. middle .. ending
+end
 
-local function CreateCooldown(parent, texture)
+-- local function GetClassCoords(unit)
+--   local _, class = UnitClass(unit)
+--   local coords = CLASS_ICON_TCOORDS[class]
+--   return coords
+-- end
+
+local function GetClassColor(nameplate, unit)
+  local _, class = UnitClass(unit)
+  local colors = RAID_CLASS_COLORS[class]
+  if (UnitIsPlayer(unit) or UnitTreatAsPlayerForDisplay(unit)) and colors then
+    return colors.r, colors.g, colors.b, 1.0
+  elseif CompactUnitFrame_IsTapDenied(nameplate.UnitFrame) then
+    return 0.9, 0.9, 0.9, 1.0
+  elseif CompactUnitFrame_IsOnThreatListWithPlayer(unit) and not UnitIsFriend("player", unit) then
+    return 1.0, 0.0, 0.0, 1.0
+  elseif UnitIsPlayer(unit) and UnitIsFriend("player", unit) then
+    return 0.66, 0.66, 1.0, 1.0
+  else
+    local resultR, resultG, resultB, resultA = UnitSelectionColor(unit, true)
+    return resultR, resultG, resultB, resultA
+  end
+end
+
+local iconSize = 16
+
+local function CreateNPCCooldown(parent, texture)
   local cooldown = CreateFrame("Cooldown", "NPCCooldownFrame" .. texture, parent, "CooldownFrameTemplate")
   local newIconSize = iconSize * NS.db.npc.scale
   cooldown:SetSize(newIconSize, newIconSize)
@@ -367,7 +448,7 @@ local function CreateCooldown(parent, texture)
   parent.cooldown = cooldown
 end
 
-local function CreateGlow(parent, texture)
+local function CreateNPCGlow(parent, texture)
   local glow = CreateFrame("Frame", "NPCGlowFrame" .. texture, parent)
   local newIconSize = iconSize * NS.db.npc.scale
   glow:SetSize(newIconSize, newIconSize)
@@ -394,142 +475,185 @@ local function CreateGlow(parent, texture)
   parent.glowTexture = glowTexture
 end
 
-local function CreateTexture(parent, _texture)
+local function CreateNPCTexture(parent, _texture)
   local texture = parent:CreateTexture(nil, "BACKGROUND")
   local newIconSize = iconSize * NS.db.npc.scale
   texture:SetSize(newIconSize, newIconSize)
   texture:SetAllPoints(parent)
   texture:SetTexture(_texture)
 
+  local zoom = 0.20
+  local textureWidth = 1 - 0.5 * zoom
   local ulx, uly, llx, lly, urx, ury, lrx, lry = GetTextureCoord(texture, textureWidth, 1, 0, 0)
   texture:SetTexCoord(ulx, uly, llx, lly, urx, ury, lrx, lry)
 
   parent.texture = texture
 end
 
-local function CreateIcon(parent, texture)
+local function CreateNPCIcon(parent, texture)
   local icon = CreateFrame("Frame", "NPCIconFrame" .. texture, parent)
   local newIconSize = iconSize * NS.db.npc.scale
   icon:SetSize(newIconSize, newIconSize)
 
-  CreateTexture(icon, texture)
-  CreateGlow(icon, texture)
-  CreateCooldown(icon, texture)
+  CreateNPCTexture(icon, texture)
+  CreateNPCGlow(icon, texture)
+  CreateNPCCooldown(icon, texture)
 
   return icon
 end
 
--- Warlock-ReadyShard
+local function CreateClassBorder(nameplate, parent)
+  local border = parent:CreateTexture(nil, "OVERLAY")
+  border:SetAtlas("ui-frame-genericplayerchoice-portrait-border")
+  -- border:SetAtlas("auctionhouse-itemicon-border-account")
+  local offsetMultiplier = 0 -- 0.25
+  local newIconSize = iconSize * NS.db.class.scale
+  local widthOffset = newIconSize * offsetMultiplier
+  local heightOffset = (newIconSize + 1) * offsetMultiplier
+  border:SetPoint("TOPLEFT", parent, "TOPLEFT", -widthOffset, widthOffset)
+  border:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", heightOffset, -heightOffset)
+  border:SetBlendMode("BLEND")
+  border:SetDesaturated(true)
 
--- Vehicle-SilvershardMines-MineCartBlue
--- Vehicle-SilvershardMines-MineCartRed
+  local r, g, b, a = GetClassColor(nameplate, nameplate.namePlateUnitToken)
+  if r and g and b and a then
+    border:SetVertexColor(r, g, b, a)
+  end
 
--- Vehicle-TempleofKotmogu-CyanBall
--- Vehicle-TempleofKotmogu-GreenBall
--- Vehicle-TempleofKotmogu-OrangeBall
--- Vehicle-TempleofKotmogu-PurpleBall
+  parent.border = border
+end
 
--- nameplates-icon-orb-green
--- nameplates-icon-orb-orange
--- nameplates-icon-orb-purple
--- nameplates-icon-orb-purple
+local function CreateClassMask(parent)
+  local mask = parent:CreateMaskTexture()
+  local newIconSize = iconSize * NS.db.class.scale
+  mask:SetTexture("Interface/Masks/CircleMaskScalable")
+  mask:SetSize(newIconSize, newIconSize)
+  mask:SetAllPoints(parent.texture)
 
--- nameplates-icon-cart-alliance
--- nameplates-icon-cart-horde
+  parent.texture:AddMaskTexture(mask)
+  parent.mask = mask
+end
 
--- nameplates-icon-flag-alliance
--- nameplates-icon-flag-horde
--- nameplates-icon-flag-neutral
+local function CreateClassTexture(nameplate, parent)
+  local texture = parent:CreateTexture(nil, "BORDER")
+  local newIconSize = iconSize * NS.db.class.scale
+  texture:SetSize(newIconSize, newIconSize)
+  texture:SetAllPoints(parent)
+  -- texture:SetTexture("Interface/GLUES/CHARACTERCREATE/UI-CHARACTERCREATE-CLASSES")
+  local texturePath = GetClassIcon(nameplate.namePlateUnitToken)
+  texture:SetTexture(texturePath)
 
--- orbs-leftIcon1-state1
--- orbs-leftIcon2-state1
--- orbs-leftIcon3-state1
--- orbs-leftIcon4-state1
--- orbs-rightIcon1-state1
--- orbs-rightIcon2-state1
--- orbs-rightIcon3-state1
--- orbs-rightIcon4-state1
+  -- local coords = GetClassCoords(nameplate.namePlateUnitToken)
+  -- if coords then
+  --   texture:SetTexCoord(unpack(coords))
+  -- end
 
--- ctf_flags-leftIcon1-state1
--- ctf_flags-leftIcon2-state1
--- ctf_flags-leftIcon3-state1
--- ctf_flags-leftIcon4-state1
--- ctf_flags-leftIcon5-state1
--- ctf_flags-rightIcon1-state1
--- ctf_flags-rightIcon2-state1
--- ctf_flags-rightIcon3-state1
--- ctf_flags-rightIcon4-state1
--- ctf_flags-rightIcon5-state1
+  local zoom = 0
+  local textureWidth = 1 - 0.5 * zoom
+  local ulx, uly, llx, lly, urx, ury, lrx, lry = GetTextureCoord(texture, textureWidth, 1, 0, 0)
+  texture:SetTexCoord(ulx, uly, llx, lly, urx, ury, lrx, lry)
 
--- ColumnIcon-FlagCapture0
--- ColumnIcon-FlagCapture1
--- ColumnIcon-FlagCapture2
--- ColumnIcon-FlagReturn0
--- ColumnIcon-FlagReturn1
+  parent.texture = texture
+end
 
--- jailerstower-score-disabled-gem-icon
--- jailerstower-score-gem-icon
--- jailerstower-score-gem-tooltipicon
--- jailerstower-score-gem-anim-flash
+local function CreateClassIcon(nameplate, parent, texture)
+  local icon = CreateFrame("Frame", "ArenaIconFrame" .. texture, parent)
+  local newIconSize = iconSize * NS.db.class.scale
+  icon:SetSize(newIconSize, newIconSize)
+  icon:SetAllPoints(parent)
+  icon:Hide()
 
--- alliance_icon_and_flag-dynamicIcon
--- alliance_icon_horde_flag-dynamicIcon
--- horde_icon_alliance_flag-dynamicIcon
--- horde_icon_and_flag-dynamicIcon
+  CreateClassTexture(nameplate, icon)
+  CreateClassMask(icon)
+  CreateClassBorder(nameplate, icon)
 
--- poi-bountyplayer-alliance
--- poi-bountyplayer-horde
+  return icon
+end
 
--- Adventures-Target-Indicator
--- Adventures-Target-Indicator-desat
--- Azerite-PointingArrow
--- CovenantSanctum-Renown-DoubleArrow-Depressed
+local function CreateArrowTexture(nameplate, parent)
+  local texture = parent:CreateTexture(nil, "OVERLAY")
+  local iconWidth = 55
+  local iconHeight = 70
+  local newIconWidth = iconWidth * NS.db.arrow.scale
+  local newIconHeight = iconHeight * NS.db.arrow.scale
+  texture:SetSize(newIconWidth, newIconHeight)
+  texture:SetAllPoints(parent)
+  texture:SetAtlas("covenantsanctum-renown-doublearrow-depressed")
+  texture:SetDesaturated(true)
+  texture:SetBlendMode("BLEND")
 
--- MiniMap-DeadArrow
--- MiniMap-QuestArrow
--- MiniMap-VignetteArrow
--- plunderstorm-icon-upgrade -- up arrow
--- plunderstorm-icon-utility -- lightning bolt
--- plunderstorm-glues-logoarrow -- down arrow
+  local r, g, b, a = GetClassColor(nameplate, nameplate.namePlateUnitToken)
+  if r and g and b and a then
+    texture:SetVertexColor(r, g, b, a)
+  end
 
--- UI-HUD-UnitFrame-Player-Portrait-ClassIcon-DemonHunter
--- classicon-demonhunter
--- groupfinder-icon-class-deathknight
--- groupfinder-icon-class-demonhunter
--- groupfinder-icon-class-druid
--- groupfinder-icon-class-hunter
--- groupfinder-icon-class-mage
--- groupfinder-icon-class-monk
--- groupfinder-icon-class-paladin
--- groupfinder-icon-class-priest
--- groupfinder-icon-class-rogue
--- groupfinder-icon-class-shaman
--- groupfinder-icon-class-warlock
--- groupfinder-icon-class-warrior
+  local degrees = 90
+  local radians = mrad(degrees)
+  texture:SetRotation(radians)
 
--- XMarksTheSpot -- X
--- UpgradeItem-32x32 -- sword
--- Ping_Map_Whole_Assist -- flag
+  parent.texture = texture
+end
 
--- leader
--- plunderstorm-glues-icon-leader
--- UI-LFG-RoleIcon-Leader
+local function CreateArrowIcon(nameplate, parent, texture)
+  local icon = CreateFrame("Frame", "ArenaIconFrame" .. texture, parent)
+  local iconWidth = 55
+  local iconHeight = 70
+  local newIconWidth = iconWidth * NS.db.arrow.scale
+  local newIconHeight = iconHeight * NS.db.arrow.scale
+  icon:SetSize(newIconWidth, newIconHeight)
+  icon:SetAllPoints(parent)
+  icon:Hide()
 
--- roleicon-tiny-healer
--- healer
--- Adventure-heal-indicator
--- ui_adv_health
--- Adventures-Healer
--- bags-icon-addslots
--- Bags-icon-AddAuthenticator
--- UI-LFG-RoleIcon-Healer
--- groupfinder-icon-role-large-heal
--- GreenCross
--- runecarving-icon-power-empty
--- Icon-Healer
--- HealerBadge
+  CreateArrowTexture(nameplate, icon)
 
--- local isLeader = UnitIsGroupLeader(unit)
+  return icon
+end
+
+local function CreateHealerTexture(nameplate, parent)
+  local texture = parent:CreateTexture(nil, "OVERLAY")
+  local newIconSize = iconSize * NS.db.healer.scale
+  texture:SetSize(newIconSize, newIconSize)
+  texture:SetAllPoints(parent)
+  texture:SetAtlas("roleicon-tiny-healer")
+  texture:SetDesaturated(false)
+
+  parent.texture = texture
+end
+
+local function CreateHealerIcon(nameplate, parent, texture)
+  local icon = CreateFrame("Frame", "ArenaIconFrame" .. texture, parent)
+  local newIconSize = iconSize * NS.db.healer.scale
+  icon:SetSize(newIconSize, newIconSize)
+  icon:SetAllPoints(parent)
+  icon:Hide()
+
+  CreateHealerTexture(nameplate, icon)
+
+  return icon
+end
+
+local function CreateQuestTexture(nameplate, parent)
+  local texture = parent:CreateTexture(nil, "OVERLAY")
+  local newIconSize = iconSize * NS.db.quest.scale
+  texture:SetSize(newIconSize, newIconSize)
+  texture:SetAllPoints(parent)
+  texture:SetAtlas("Crosshair_Quest_48")
+  texture:SetDesaturated(false)
+
+  parent.texture = texture
+end
+
+local function CreateQuestIcon(nameplate, parent, texture)
+  local icon = CreateFrame("Frame", "ArenaIconFrame" .. texture, parent)
+  local newIconSize = iconSize * NS.db.quest.scale
+  icon:SetSize(newIconSize, newIconSize)
+  icon:SetAllPoints(parent)
+  icon:Hide()
+
+  CreateQuestTexture(nameplate, icon)
+
+  return icon
+end
 
 local function addQuestIndicator(nameplate, guid)
   local unit = nameplate.namePlateUnitToken
@@ -553,20 +677,14 @@ local function addQuestIndicator(nameplate, guid)
   end
 
   if not nameplate.nphQuestIndicator then
-    nameplate.nphQuestIndicator = nameplate.rbgdAnchorFrame:CreateTexture(nil, "OVERLAY")
+    nameplate.nphQuestIndicator = CreateQuestIcon(nameplate, nameplate.rbgdAnchorFrame, "quest")
   end
-
-  local newIconSize = iconSize * NS.db.quest.scale
 
   nameplate.nphQuestIndicator:SetIgnoreParentScale(NS.db.general.ignoreNameplateScale)
   nameplate.nphQuestIndicator:SetIgnoreParentAlpha(NS.db.general.ignoreNameplateAlpha)
-  nameplate.nphQuestIndicator:SetScale(1)
-  nameplate.nphQuestIndicator:SetAlpha(1)
-  nameplate.nphQuestIndicator:SetBlendMode("BLEND")
-  nameplate.nphQuestIndicator:SetDesaturated(false)
-  nameplate.nphQuestIndicator:SetVertexColor(1, 1, 1, 1)
+
+  local newIconSize = iconSize * NS.db.quest.scale
   nameplate.nphQuestIndicator:SetSize(newIconSize, newIconSize)
-  nameplate.nphQuestIndicator:SetAtlas("Crosshair_Quest_48")
 
   local offset = {
     x = NS.db.quest.offsetX,
@@ -587,11 +705,14 @@ local function addNPCIndicator(nameplate, guid)
   local unit = nameplate.namePlateUnitToken
 
   local isPlayer = UnitIsPlayer(unit)
-  local isNPC = not isPlayer
+  -- local isNPC = not isPlayer
   local isSelf = UnitIsUnit(unit, "player")
   local isFriend = UnitIsFriend("player", unit)
   local isEnemy = UnitIsEnemy("player", unit)
   local isDeadOrGhost = UnitIsDeadOrGhost(unit)
+  local isArena = NameplateIconsFrame.inArena
+  local isBattleground = NameplateIconsFrame.inBattleground
+  local isOutdoors = NameplateIconsFrame.isOutdoors
 
   local npcID = select(6, ssplit("-", guid))
   local hideDead = isDeadOrGhost
@@ -601,10 +722,19 @@ local function addNPCIndicator(nameplate, guid)
   local hideEnemy = NS.db.npc.showEnemy == false and isEnemy
   local hideNotInList = NS.isNPCInList(NS.NPC_SHOW_LIST, npcID) ~= true
   local hideNotEnabled = not NS.db.npcs[npcID] or NS.db.npcs[npcID].enabled ~= true
-  local hideGroup = NS.db.npc.groupOnly and not (IsInRaid() or IsInGroup())
-  local hideInstances = NS.db.npc.instanceOnly and not IsInInstance()
-  local hideTestMode = not NS.db.npc.test
-  local hideNPCIndicator = hideTestMode
+  local hideOutsideArena = not NS.db.npc.showArena and isArena
+  local hideOutsideBattleground = not NS.db.npc.showBattleground and isBattleground
+  local hideOutside = not NS.db.npc.showOutdoors and isOutdoors
+  local hideLocation = true
+  if isArena then
+    hideLocation = hideOutsideArena
+  elseif isBattleground then
+    hideLocation = hideOutsideBattleground
+  elseif isOutdoors then
+    hideLocation = hideOutside
+  end
+  local notTestMode = not NS.db.npc.test
+  local hideNPCIndicator = notTestMode
     and (
       hideNotInList
       or hideNotEnabled
@@ -613,12 +743,8 @@ local function addNPCIndicator(nameplate, guid)
       or hidePlayers
       or hideFriendly
       or hideEnemy
-      or hideGroup
-      or hideInstances
+      or hideLocation
     )
-
-  CompactUnitFrame_UpdateHealthColor(nameplate.UnitFrame)
-  CompactUnitFrame_UpdateName(nameplate.UnitFrame)
 
   if hideNPCIndicator then
     if nameplate.nphNPCIndicator then
@@ -637,7 +763,7 @@ local function addNPCIndicator(nameplate, guid)
   local npcDuration = NS.db.npcs[npcId].duration
 
   if not nameplate.nphNPCIndicator then
-    nameplate.nphNPCIndicator = CreateIcon(nameplate, npcIcon)
+    nameplate.nphNPCIndicator = CreateNPCIcon(nameplate, npcIcon)
   end
 
   local offset = {
@@ -657,15 +783,24 @@ local function addNPCIndicator(nameplate, guid)
   nameplate.nphNPCIndicator:Show()
 
   do
+    local showArenas = NS.db.arena.showArena and isArena
+    local showBattlegrounds = NS.db.arena.showBattleground and isBattleground
+    local showOutdoors = NS.db.arena.showOutdoors and isOutdoors
+
     nameplate.nphNPCIndicator.texture:SetIgnoreParentScale(NS.db.general.ignoreNameplateScale)
     -- NEED TO CHANGE THIS TO IGNORE ALPHA WHEN HIDING HEALTHBARS
-    if isFriend and NS.db.arena.healthBars.hideFriendly then
-      nameplate.nphNPCIndicator.texture:SetIgnoreParentAlpha(true)
-    elseif isEnemy and NS.db.arena.healthBars.hideEnemy then
-      nameplate.nphNPCIndicator.texture:SetIgnoreParentAlpha(true)
+    if showArenas or showBattlegrounds or showOutdoors then
+      if isFriend and NS.db.arena.healthBars.hideFriendly then
+        nameplate.nphNPCIndicator.texture:SetIgnoreParentAlpha(true)
+      elseif isEnemy and NS.db.arena.healthBars.hideEnemy then
+        nameplate.nphNPCIndicator.texture:SetIgnoreParentAlpha(true)
+      else
+        nameplate.nphNPCIndicator.texture:SetIgnoreParentAlpha(NS.db.general.ignoreNameplateAlpha)
+      end
     else
       nameplate.nphNPCIndicator.texture:SetIgnoreParentAlpha(NS.db.general.ignoreNameplateAlpha)
     end
+
     nameplate.nphNPCIndicator.texture:SetSize(newIconSize, newIconSize)
     nameplate.nphNPCIndicator.texture:ClearAllPoints()
     nameplate.nphNPCIndicator.texture:SetAllPoints(nameplate.nphNPCIndicator)
@@ -686,15 +821,18 @@ local function addNPCIndicator(nameplate, guid)
 
     nameplate.nphNPCIndicator.glowTexture:SetIgnoreParentScale(NS.db.general.ignoreNameplateScale)
     -- NEED TO CHANGE THIS TO IGNORE ALPHA WHEN HIDING HEALTHBARS
-    if isNPC and NS.db.arena.healthBars.hideNPC then
-      nameplate.nphNPCIndicator.glowTexture:SetIgnoreParentAlpha(true)
-    elseif isFriend and NS.db.arena.healthBars.hideFriendly then
-      nameplate.nphNPCIndicator.glowTexture:SetIgnoreParentAlpha(true)
-    elseif isEnemy and NS.db.arena.healthBars.hideEnemy then
-      nameplate.nphNPCIndicator.glowTexture:SetIgnoreParentAlpha(true)
+    if showArenas or showBattlegrounds or showOutdoors then
+      if isFriend and NS.db.arena.healthBars.hideFriendly then
+        nameplate.nphNPCIndicator.glowTexture:SetIgnoreParentAlpha(true)
+      elseif isEnemy and NS.db.arena.healthBars.hideEnemy then
+        nameplate.nphNPCIndicator.glowTexture:SetIgnoreParentAlpha(true)
+      else
+        nameplate.nphNPCIndicator.glowTexture:SetIgnoreParentAlpha(NS.db.general.ignoreNameplateAlpha)
+      end
     else
       nameplate.nphNPCIndicator.glowTexture:SetIgnoreParentAlpha(NS.db.general.ignoreNameplateAlpha)
     end
+
     nameplate.nphNPCIndicator.glowTexture:SetVertexColor(npcGlow[1], npcGlow[2], npcGlow[3], npcGlow[4])
     if changeHealthbarColor then
       nameplate.UnitFrame.HealthBarsContainer.healthBar:SetStatusBarColor(
@@ -784,6 +922,9 @@ local function addHealerIndicator(nameplate, guid)
   local isEnemy = UnitIsEnemy("player", unit)
   local isHealer = (NS.isHealer("player") or Healers[guid]) and true or false
   local isDeadOrGhost = UnitIsDeadOrGhost(unit)
+  local isArena = NameplateIconsFrame.inArena
+  local isBattleground = NameplateIconsFrame.inBattleground
+  local isOutdoors = NameplateIconsFrame.isOutdoors
 
   local hideDead = isDeadOrGhost
   local hideNPCs = not isPlayer
@@ -791,11 +932,20 @@ local function addHealerIndicator(nameplate, guid)
   local hideAllies = not NS.db.healer.showFriendly and (isFriend and isPlayer)
   local hideEnemies = not NS.db.healer.showEnemy and (isEnemy and isPlayer)
   local hideHealers = not isHealer
-  local hideGroup = NS.db.healer.groupOnly and not (IsInRaid() or IsInGroup())
-  local hideInstances = NS.db.healer.instanceOnly and not IsInInstance()
-  local hideTestMode = not NS.db.healer.test
-  local hideHealerIndicator = hideTestMode
-    and (hideNPCs or hideDead or hideSelf or hideAllies or hideEnemies or hideHealers or hideGroup or hideInstances)
+  local hideOutsideArena = not NS.db.healer.showArena and isArena
+  local hideOutsideBattleground = not NS.db.healer.showBattleground and isBattleground
+  local hideOutside = not NS.db.healer.showOutdoors and isOutdoors
+  local hideLocation = true
+  if isArena then
+    hideLocation = hideOutsideArena
+  elseif isBattleground then
+    hideLocation = hideOutsideBattleground
+  elseif isOutdoors then
+    hideLocation = hideOutside
+  end
+  local notTestMode = not NS.db.healer.test
+  local hideHealerIndicator = notTestMode
+    and (hideNPCs or hideDead or hideSelf or hideAllies or hideEnemies or hideHealers or hideLocation)
 
   if hideHealerIndicator then
     if nameplate.nphHealerIndicator ~= nil then
@@ -805,20 +955,14 @@ local function addHealerIndicator(nameplate, guid)
   end
 
   if not nameplate.nphHealerIndicator then
-    nameplate.nphHealerIndicator = nameplate.rbgdAnchorFrame:CreateTexture(nil, "OVERLAY")
+    nameplate.nphHealerIndicator = CreateHealerIcon(nameplate, nameplate.rbgdAnchorFrame, "healer")
   end
+
+  nameplate.nphHealerIndicator:SetIgnoreParentScale(NS.db.general.ignoreNameplateScale)
+  nameplate.nphHealerIndicator:SetIgnoreParentAlpha(NS.db.general.ignoreNameplateAlpha)
 
   local newIconSize = iconSize * NS.db.healer.scale
   nameplate.nphHealerIndicator:SetSize(newIconSize, newIconSize)
-  nameplate.nphHealerIndicator:SetIgnoreParentScale(NS.db.general.ignoreNameplateScale)
-  nameplate.nphHealerIndicator:SetIgnoreParentAlpha(NS.db.general.ignoreNameplateAlpha)
-  nameplate.nphHealerIndicator:SetScale(1)
-  nameplate.nphHealerIndicator:SetAlpha(1)
-
-  nameplate.nphHealerIndicator:SetAtlas("roleicon-tiny-healer")
-  nameplate.nphHealerIndicator:SetBlendMode("BLEND")
-  nameplate.nphHealerIndicator:SetDesaturated(false)
-  nameplate.nphHealerIndicator:SetVertexColor(1, 1, 1)
 
   local hasObjective = not isSelf and UnitPvpClassification(unit)
   local hasRaidMarker = not isSelf and GetRaidTargetIndex(unit)
@@ -839,123 +983,224 @@ local function addHealerIndicator(nameplate, guid)
   nameplate.nphHealerIndicator:Show()
 end
 
-local function addArenaIndicator(nameplate, guid)
+local function addClassIndicator(nameplate, guid)
   local unit = nameplate.namePlateUnitToken
 
   local isPlayer = UnitIsPlayer(unit)
   local isSelf = UnitIsUnit(unit, "player")
   local isFriend = UnitIsFriend("player", unit)
   local isEnemy = UnitIsEnemy("player", unit)
-  local isArena = NameplateIconsFrame.inArena
   local isDeadOrGhost = UnitIsDeadOrGhost(unit)
-
-  --[[
-  -- local r = UnitReaction("player", unit)
-  -- if r then
-  --   return r < 5 and "hostile" or "friendly"
-  -- end
-  ]]
-  -- local reaction = UnitReaction(unit, "player")
-  -- local isEnemy = (reaction and reaction < 4) and not isSelf
-  -- local isNeutral = (reaction and reaction == 4) and not isSelf
-  -- local isFriend = (reaction and reaction >= 5) and not isSelf
-
+  local isArena = NameplateIconsFrame.inArena
+  local isBattleground = NameplateIconsFrame.inBattleground
+  local isOutdoors = NameplateIconsFrame.isOutdoors
   local hideDead = isDeadOrGhost
   local hideNPCs = not isPlayer
   local hideSelf = isSelf
-  local hideAllies = not NS.db.arena.showFriendly and (isFriend and isPlayer)
-  local hideEnemies = not NS.db.arena.showEnemy and (isEnemy and isPlayer)
-  local hideArena = not isArena
-  local notTestMode = not NS.db.arena.test
-  local hideArenaIndicator = notTestMode
-    and (hideNPCs or hideSelf or hideDead or hideAllies or hideEnemies or hideArena)
+  local hideAllies = not NS.db.class.showFriendly and (isFriend and isPlayer)
+  local hideEnemies = not NS.db.class.showEnemy and (isEnemy and isPlayer)
+  local hideOutsideArena = not NS.db.class.showArena and isArena
+  local hideOutsideBattleground = not NS.db.class.showBattleground and isBattleground
+  local hideOutside = not NS.db.class.showOutdoors and isOutdoors
+  local hideLocation = true
+  if isArena then
+    hideLocation = hideOutsideArena
+  elseif isBattleground then
+    hideLocation = hideOutsideBattleground
+  elseif isOutdoors then
+    hideLocation = hideOutside
+  end
 
-  if hideArenaIndicator then
-    if nameplate.nphArenaIndicator then
-      nameplate.nphArenaIndicator:Hide()
+  local notTestMode = not NS.db.class.test
+  local hideClassIndicator = notTestMode
+    and (hideNPCs or hideSelf or hideDead or hideAllies or hideEnemies or hideLocation)
+
+  if hideClassIndicator then
+    if nameplate.nphClassIndicator then
+      nameplate.nphClassIndicator:Hide()
     end
     return
   end
 
-  if not nameplate.nphArenaIndicator then
-    nameplate.nphArenaIndicator = nameplate.rbgdAnchorFrame:CreateTexture(nil, "OVERLAY")
+  if not nameplate.nphClassIndicator then
+    nameplate.nphClassIndicator = CreateClassIcon(nameplate, nameplate.rbgdAnchorFrame, "class")
   end
 
-  nameplate.nphArenaIndicator:SetIgnoreParentScale(NS.db.general.ignoreNameplateScale)
-  -- NEED TO CHANGE THIS TO IGNORE ALHPA WHEN HIDING HEALTHBARS
-  if isFriend and NS.db.arena.healthBars.hideFriendly then
-    nameplate.nphArenaIndicator:SetIgnoreParentAlpha(true)
-  elseif isEnemy and NS.db.arena.healthBars.hideEnemy then
-    nameplate.nphArenaIndicator:SetIgnoreParentAlpha(true)
+  nameplate.nphClassIndicator.texture:SetIgnoreParentScale(NS.db.general.ignoreNameplateScale)
+  -- NEED TO CHANGE THIS TO IGNORE ALPHA WHEN HIDING HEALTHBARS
+  local showArenas = NS.db.arena.showArena and isArena
+  local showBattlegrounds = NS.db.arena.showBattleground and isBattleground
+  local showOutdoors = NS.db.arena.showOutdoors and isOutdoors
+  if showArenas or showBattlegrounds or showOutdoors then
+    if isFriend and NS.db.arena.healthBars.hideFriendly then
+      nameplate.nphClassIndicator.texture:SetIgnoreParentAlpha(true)
+    elseif isEnemy and NS.db.arena.healthBars.hideEnemy then
+      nameplate.nphClassIndicator.texture:SetIgnoreParentAlpha(true)
+    else
+      nameplate.nphClassIndicator.texture:SetIgnoreParentAlpha(NS.db.general.ignoreNameplateAlpha)
+    end
   else
-    nameplate.nphArenaIndicator:SetIgnoreParentAlpha(NS.db.general.ignoreNameplateAlpha)
+    nameplate.nphClassIndicator.texture:SetIgnoreParentAlpha(NS.db.general.ignoreNameplateAlpha)
   end
-  nameplate.nphArenaIndicator:SetScale(1)
-  nameplate.nphArenaIndicator:SetAlpha(1)
-  nameplate.nphArenaIndicator:SetBlendMode("BLEND")
+
+  local newIconSize = iconSize * NS.db.class.scale
+  nameplate.nphClassIndicator:SetSize(newIconSize, newIconSize)
+
+  local texturePath = GetClassIcon(unit)
+  nameplate.nphClassIndicator.texture:SetTexture(texturePath)
+
+  -- local coords = GetClassCoords(unit)
+  -- if coords then
+  --   nameplate.nphClassIndicator.texture:SetTexCoord(unpack(coords))
+  -- end
+
+  local zoom = 0
+  local textureWidth = 1 - 0.5 * zoom
+  local ulx, uly, llx, lly, urx, ury, lrx, lry =
+    GetTextureCoord(nameplate.nphClassIndicator.texture, textureWidth, 1, 0, 0)
+  nameplate.nphClassIndicator.texture:SetTexCoord(ulx, uly, llx, lly, urx, ury, lrx, lry)
+
+  local r, g, b, a = GetClassColor(nameplate, unit)
+  if r and g and b and a then
+    nameplate.nphClassIndicator.border:SetVertexColor(r, g, b, a)
+  end
+
+  -- nameplate.nphClassIndicator.border:SetAllPoints(nameplate.nphClassIndicator)
+  local offsetMultiplier = 0 -- 0.25
+  local widthOffset = newIconSize * offsetMultiplier
+  local heightOffset = (newIconSize + 1) * offsetMultiplier
+  nameplate.nphClassIndicator.border:SetPoint(
+    "TOPLEFT",
+    nameplate.nphClassIndicator,
+    "TOPLEFT",
+    -widthOffset,
+    widthOffset
+  )
+  nameplate.nphClassIndicator.border:SetPoint(
+    "BOTTOMRIGHT",
+    nameplate.nphClassIndicator,
+    "BOTTOMRIGHT",
+    heightOffset,
+    -heightOffset
+  )
+
+  local offset = {
+    x = NS.db.class.offsetX,
+    y = NS.db.class.offsetY,
+  }
+  local horizontalPoint = NS.db.class.position == "LEFT" and "RIGHT" or "LEFT"
+  local point = NS.db.class.position == "TOP" and "BOTTOM" or horizontalPoint
+  local horizontalRelativePoint = NS.db.class.position == "LEFT" and "LEFT" or "RIGHT"
+  local relativePoint = NS.db.class.position == "TOP" and "TOP" or horizontalRelativePoint
+  local relativeTo = NS.db.class.attachToHealthBar and GetHealthBarFrame(nameplate) or nameplate
+  nameplate.nphClassIndicator:ClearAllPoints()
+  -- point, relativeTo, relativePoint, x, y
+  nameplate.nphClassIndicator:SetPoint(point, relativeTo, relativePoint, offset.x, offset.y)
+  nameplate.nphClassIndicator:Show()
+end
+
+local function addArrowIndicator(nameplate, guid)
+  local unit = nameplate.namePlateUnitToken
+
+  local isPlayer = UnitIsPlayer(unit)
+  local isSelf = UnitIsUnit(unit, "player")
+  local isFriend = UnitIsFriend("player", unit)
+  local isEnemy = UnitIsEnemy("player", unit)
+  local isDeadOrGhost = UnitIsDeadOrGhost(unit)
+  local isArena = NameplateIconsFrame.inArena
+  local isBattleground = NameplateIconsFrame.inBattleground
+  local isOutdoors = NameplateIconsFrame.isOutdoors
+
+  local hideDead = isDeadOrGhost
+  local hideNPCs = not isPlayer
+  local hideSelf = isSelf
+  local hideAllies = not NS.db.arrow.showFriendly and (isFriend and isPlayer)
+  local hideEnemies = not NS.db.arrow.showEnemy and (isEnemy and isPlayer)
+  local hideOutsideArena = not NS.db.arrow.showArena and isArena
+  local hideOutsideBattleground = not NS.db.arrow.showBattleground and isBattleground
+  local hideOutside = not NS.db.arrow.showOutdoors and isOutdoors
+  local hideLocation = true
+  if isArena then
+    hideLocation = hideOutsideArena
+  elseif isBattleground then
+    hideLocation = hideOutsideBattleground
+  elseif isOutdoors then
+    hideLocation = hideOutside
+  end
+  local notTestMode = not NS.db.arrow.test
+  local hideArrowIndicator = notTestMode
+    and (hideNPCs or hideSelf or hideDead or hideAllies or hideEnemies or hideLocation)
+
+  if hideArrowIndicator then
+    if nameplate.nphArrowIndicator then
+      nameplate.nphArrowIndicator:Hide()
+    end
+    return
+  end
+
+  if not nameplate.nphArrowIndicator then
+    nameplate.nphArrowIndicator = CreateArrowIcon(nameplate, nameplate.rbgdAnchorFrame, "arrow")
+  end
+
+  nameplate.nphArrowIndicator.texture:SetIgnoreParentScale(NS.db.general.ignoreNameplateScale)
+  -- NEED TO CHANGE THIS TO IGNORE ALPHA WHEN HIDING HEALTHBARS
+  local showArenas = NS.db.arena.showArena and isArena
+  local showBattlegrounds = NS.db.arena.showBattleground and isBattleground
+  local showOutdoors = NS.db.arena.showOutdoors and isOutdoors
+  if showArenas or showBattlegrounds or showOutdoors then
+    if isFriend and NS.db.arena.healthBars.hideFriendly then
+      nameplate.nphArrowIndicator.texture:SetIgnoreParentAlpha(true)
+    elseif isEnemy and NS.db.arena.healthBars.hideEnemy then
+      nameplate.nphArrowIndicator.texture:SetIgnoreParentAlpha(true)
+    else
+      nameplate.nphArrowIndicator.texture:SetIgnoreParentAlpha(NS.db.general.ignoreNameplateAlpha)
+    end
+  else
+    nameplate.nphArrowIndicator.texture:SetIgnoreParentAlpha(NS.db.general.ignoreNameplateAlpha)
+  end
 
   local iconWidth = 55
   local iconHeight = 70
+  local newIconWidth = iconWidth * NS.db.arrow.scale
+  local newIconHeight = iconHeight * NS.db.arrow.scale
+  nameplate.nphArrowIndicator:SetSize(newIconWidth, newIconHeight)
 
-  if NS.db.arena.replaceHealerIcon then
-    nameplate.nphArenaIndicator:SetAtlas("roleicon-tiny-healer")
-    nameplate.nphArenaIndicator:SetDesaturated(false)
-    nameplate.nphArenaIndicator:SetVertexColor(1, 1, 1)
-
-    local newIconSize = iconWidth * NS.db.arena.scale
-    nameplate.nphArenaIndicator:SetSize(newIconSize, newIconSize)
-  else
-    nameplate.nphArenaIndicator:SetAtlas("covenantsanctum-renown-doublearrow-depressed")
-    nameplate.nphArenaIndicator:SetDesaturated(true)
-
-    local _, class = UnitClass(unit)
-    local colors = RAID_CLASS_COLORS[class]
-    if (UnitIsPlayer(unit) or UnitTreatAsPlayerForDisplay(unit)) and colors then
-      nameplate.nphArenaIndicator:SetVertexColor(colors.r, colors.g, colors.b)
-    elseif CompactUnitFrame_IsTapDenied(nameplate.UnitFrame) then
-      nameplate.nphArenaIndicator:SetVertexColor(0.9, 0.9, 0.9)
-    elseif CompactUnitFrame_IsOnThreatListWithPlayer(unit) and not UnitIsFriend("player", unit) then
-      nameplate.nphArenaIndicator:SetVertexColor(1.0, 0.0, 0.0)
-    elseif UnitIsPlayer(unit) and UnitIsFriend("player", unit) then
-      nameplate.nphArenaIndicator:SetVertexColor(0.66, 0.66, 1.0)
-    else
-      local r, g, b = UnitSelectionColor(unit, true)
-      nameplate.nphArenaIndicator:SetVertexColor(r, g, b)
-    end
-
-    local degrees = 90
-    local radians = mrad(degrees)
-    nameplate.nphArenaIndicator:SetRotation(radians)
-
-    local newIconWidth = iconWidth * NS.db.arena.scale
-    local newIconHeight = iconHeight * NS.db.arena.scale
-    nameplate.nphArenaIndicator:SetSize(newIconWidth, newIconHeight)
+  local r, g, b, a = GetClassColor(nameplate, unit)
+  if r and g and b and a then
+    nameplate.nphArrowIndicator.texture:SetVertexColor(r, g, b, a)
   end
 
   local offset = {
-    x = NS.db.arena.offsetX,
-    y = NS.db.arena.offsetY,
+    x = NS.db.arrow.offsetX,
+    y = NS.db.arrow.offsetY,
   }
-  local horizontalPoint = NS.db.arena.position == "LEFT" and "RIGHT" or "LEFT"
-  local point = NS.db.arena.position == "TOP" and "BOTTOM" or horizontalPoint
-  local horizontalRelativePoint = NS.db.arena.position == "LEFT" and "LEFT" or "RIGHT"
-  local relativePoint = NS.db.arena.position == "TOP" and "TOP" or horizontalRelativePoint
-  local relativeTo = NS.db.arena.attachToHealthBar and GetHealthBarFrame(nameplate) or nameplate
-  nameplate.nphArenaIndicator:ClearAllPoints()
+  local horizontalPoint = NS.db.arrow.position == "LEFT" and "RIGHT" or "LEFT"
+  local point = NS.db.arrow.position == "TOP" and "BOTTOM" or horizontalPoint
+  local horizontalRelativePoint = NS.db.arrow.position == "LEFT" and "LEFT" or "RIGHT"
+  local relativePoint = NS.db.arrow.position == "TOP" and "TOP" or horizontalRelativePoint
+  local relativeTo = NS.db.arrow.attachToHealthBar and GetHealthBarFrame(nameplate) or nameplate
+  nameplate.nphArrowIndicator:ClearAllPoints()
   -- point, relativeTo, relativePoint, x, y
-  nameplate.nphArenaIndicator:SetPoint(point, relativeTo, relativePoint, offset.x, offset.y)
-  nameplate.nphArenaIndicator:Show()
+  nameplate.nphArrowIndicator:SetPoint(point, relativeTo, relativePoint, offset.x, offset.y)
+  nameplate.nphArrowIndicator:Show()
 end
 
 function NameplateIcons:detachFromNameplate(nameplate)
-  if nameplate.nphArenaIndicator ~= nil then
-    nameplate.nphArenaIndicator:Hide()
+  if nameplate.nphArrowIndicator ~= nil then
+    nameplate.nphArrowIndicator:Hide()
+  end
+  if nameplate.nphClassIndicator ~= nil then
+    nameplate.nphClassIndicator:Hide()
   end
   if nameplate.nphHealerIndicator ~= nil then
     nameplate.nphHealerIndicator:Hide()
   end
   if nameplate.nphNPCIndicator ~= nil then
     nameplate.nphNPCIndicator:Hide()
+    if nameplate.UnitFrame then
+      CompactUnitFrame_UpdateHealthColor(nameplate.UnitFrame)
+      CompactUnitFrame_UpdateName(nameplate.UnitFrame)
+    end
   end
   if nameplate.nphQuestIndicator ~= nil then
     nameplate.nphQuestIndicator:Hide()
@@ -971,17 +1216,23 @@ function NameplateIcons:attachToNameplate(nameplate, guid)
   end
 
   checkIsHealer(nameplate, guid)
-
   hideHealthBars(nameplate, guid)
   hideNames(nameplate, guid)
   hideCastBars(nameplate, guid)
   hideBuffFrames(nameplate, guid)
 
-  if NS.db.arena.enabled then
-    addArenaIndicator(nameplate, guid)
+  if NS.db.arrow.enabled then
+    addArrowIndicator(nameplate, guid)
   else
-    if nameplate.nphArenaIndicator ~= nil then
-      nameplate.nphArenaIndicator:Hide()
+    if nameplate.nphArrowIndicator ~= nil then
+      nameplate.nphArrowIndicator:Hide()
+    end
+  end
+  if NS.db.class.enabled then
+    addClassIndicator(nameplate, guid)
+  else
+    if nameplate.nphClassIndicator ~= nil then
+      nameplate.nphClassIndicator:Hide()
     end
   end
   if NS.db.healer.enabled then
@@ -1021,50 +1272,6 @@ local function refreshNameplates(override)
     end
   end
 end
-
--- hooksecurefunc(NamePlateDriverFrame, "OnSoftTargetUpdate", function(self, unit)
---   local iconSize = tonumber(GetCVar("SoftTargetNameplateSize"))
---   local doEnemyIcon = GetCVarBool("SoftTargetIconEnemy")
---   local doFriendIcon = GetCVarBool("SoftTargetIconFriend")
---   local doInteractIcon = GetCVarBool("SoftTargetIconInteract")
---   for _, frame in pairs(C_NamePlate.GetNamePlates(issecure())) do
---     local icon = frame.UnitFrame.SoftTargetFrame.Icon
---     local hasCursorTexture = false
---     if iconSize > 0 then
---       if
---         (doEnemyIcon and UnitIsUnit(frame.namePlateUnitToken, "softenemy"))
---         or (doFriendIcon and UnitIsUnit(frame.namePlateUnitToken, "softfriend"))
---         or (doInteractIcon and UnitIsUnit(frame.namePlateUnitToken, "softinteract"))
---       then
---         hasCursorTexture = SetUnitCursorTexture(icon, frame.namePlateUnitToken)
---       end
---       if hasCursorTexture and (doInteractIcon and UnitIsUnit(frame.namePlateUnitToken, "softinteract")) then
---         if UnitGUID(frame.namePlateUnitToken) then
---           hideHealthBars(frame, UnitGUID(frame.namePlateUnitToken), true)
---         end
---       end
---     end
-
---     if hasCursorTexture then
---       icon:Show()
---     else
---       icon:Hide()
---     end
---   end
--- end)
-
--- hooksecurefunc(NamePlateDriverFrame, "OnRaidTargetUpdate", function(self, unit)
---   for _, frame in pairs(C_NamePlate.GetNamePlates(issecure())) do
---     local icon = frame.UnitFrame.RaidTargetFrame.RaidTargetIcon
---     local index = GetRaidTargetIndex(frame.namePlateUnitToken)
---     if index and not UnitIsUnit("player", frame.namePlateUnitToken) then
---       SetRaidTargetIconTexture(icon, index)
---       icon:Show()
---     else
---       icon:Hide()
---     end
---   end
--- end)
 
 function NameplateIcons:NAME_PLATE_UNIT_REMOVED(unitToken)
   local nameplate = GetNamePlateForUnit(unitToken, issecure())
@@ -1200,54 +1407,178 @@ function NameplateIcons:ARENA_OPPONENT_UPDATE()
   end
 end
 
+-- can run before a nameplate is fetched so needs updated info
+hooksecurefunc("CompactUnitFrame_UpdateHealthColor", function(frame)
+  if not frame then
+    return
+  end
+  if frame:IsForbidden() then
+    return
+  end
+  if not frame.unit then
+    return
+  end
+  if not smatch(frame.unit, "nameplate") then
+    return
+  end
+
+  local guid = UnitGUID(frame.unit)
+  if guid then
+    local unit = frame.unit
+
+    local isPlayer = UnitIsPlayer(unit)
+    -- local isNPC = not isPlayer
+    local isSelf = UnitIsUnit(unit, "player")
+    local isFriend = UnitIsFriend("player", unit)
+    local isEnemy = UnitIsEnemy("player", unit)
+    local isDeadOrGhost = UnitIsDeadOrGhost(unit)
+    local isArena = NameplateIconsFrame.inArena
+    local isBattleground = NameplateIconsFrame.inBattleground
+    local isOutdoors = NameplateIconsFrame.isOutdoors
+
+    local npcID = select(6, ssplit("-", guid))
+    local hideDead = isDeadOrGhost
+    local hideSelf = isSelf
+    local hidePlayers = isPlayer
+    local hideFriendly = NS.db.npc.showFriendly == false and isFriend
+    local hideEnemy = NS.db.npc.showEnemy == false and isEnemy
+    local hideNotInList = NS.isNPCInList(NS.NPC_SHOW_LIST, npcID) ~= true
+    local hideNotEnabled = not NS.db.npcs[npcID] or NS.db.npcs[npcID].enabled ~= true
+    local hideOutsideArena = not NS.db.npc.showArena and isArena
+    local hideOutsideBattleground = not NS.db.npc.showBattleground and isBattleground
+    local hideOutside = not NS.db.npc.showOutdoors and isOutdoors
+    local hideLocation = true
+    if isArena then
+      hideLocation = hideOutsideArena
+    elseif isBattleground then
+      hideLocation = hideOutsideBattleground
+    elseif isOutdoors then
+      hideLocation = hideOutside
+    end
+    local notTestMode = not NS.db.npc.test
+    local hideNPCIndicator = notTestMode
+      and (
+        hideNotInList
+        or hideNotEnabled
+        or hideDead
+        or hideSelf
+        or hidePlayers
+        or hideFriendly
+        or hideEnemy
+        or hideLocation
+      )
+
+    if not hideNPCIndicator then
+      local npcGlow = NS.db.npcs[npcID].glow
+      local changeHealthbarColor = NS.db.npcs[npcID].healthColor == true
+      if changeHealthbarColor then
+        frame.healthBar:SetStatusBarColor(npcGlow[1], npcGlow[2], npcGlow[3], npcGlow[4])
+      end
+    end
+  end
+end)
+
 hooksecurefunc("CompactUnitFrame_UpdateName", function(frame)
   if not frame then
     return
   end
-
   if frame:IsForbidden() then
     return
   end
-
   if not frame.unit then
     return
   end
-
   if not frame.name then
     return
   end
-
   if not ShouldShowName(frame) then
     return
   end
+  if not smatch(frame.unit, "nameplate") then
+    return
+  end
 
-  if smatch(frame.unit, "nameplate") then
+  local guid = UnitGUID(frame.unit)
+  if guid then
     local unit = frame.unit
-    local unit_name = GetUnitName(unit, false)
-    if unit_name then
-      local isPlayer = UnitIsPlayer(unit)
-      local isNPC = not isPlayer
-      local isFriend = UnitIsFriend("player", unit)
-      local isEnemy = UnitIsEnemy("player", unit)
-      local isArena = NameplateIconsFrame.inArena
 
-      local hideFriendly = NS.db.arena.names.hideFriendly and (isFriend and isPlayer)
-      local hideEnemy = NS.db.arena.names.hideEnemy and (isEnemy and isPlayer)
-      local hideNPC = NS.db.arena.names.hideNPC and isNPC
-      local dontRunOutside = not NS.db.arena.showOutside and not isArena
-      local notTestMode = not NS.db.arena.test
-      local hideName = notTestMode and (hideFriendly or hideEnemy or hideNPC)
+    local isPlayer = UnitIsPlayer(unit)
+    local isNPC = not isPlayer
+    local isSelf = UnitIsUnit(unit, "player")
+    local isFriend = UnitIsFriend("player", unit)
+    local isEnemy = UnitIsEnemy("player", unit)
+    local isDeadOrGhost = UnitIsDeadOrGhost(unit)
+    local isArena = NameplateIconsFrame.inArena
+    local isBattleground = NameplateIconsFrame.inBattleground
+    local isOutdoors = NameplateIconsFrame.isOutdoors
 
-      if notTestMode and dontRunOutside then
-        frame.name:SetAlpha(1)
-        return
+    do
+      local npcID = select(6, ssplit("-", guid))
+      local hideDead = isDeadOrGhost
+      local hideSelf = isSelf
+      local hidePlayers = isPlayer
+      local hideFriendly = NS.db.npc.showFriendly == false and isFriend
+      local hideEnemy = NS.db.npc.showEnemy == false and isEnemy
+      local hideNotInList = NS.isNPCInList(NS.NPC_SHOW_LIST, npcID) ~= true
+      local hideNotEnabled = not NS.db.npcs[npcID] or NS.db.npcs[npcID].enabled ~= true
+      local hideOutsideArena = not NS.db.npc.showArena and isArena
+      local hideOutsideBattleground = not NS.db.npc.showBattleground and isBattleground
+      local hideOutside = not NS.db.npc.showOutdoors and isOutdoors
+      local hideLocation = true
+      if isArena then
+        hideLocation = hideOutsideArena
+      elseif isBattleground then
+        hideLocation = hideOutsideBattleground
+      elseif isOutdoors then
+        hideLocation = hideOutside
       end
+      local notTestMode = not NS.db.npc.test
+      local hideNPCIndicator = notTestMode
+        and (
+          hideNotInList
+          or hideNotEnabled
+          or hideDead
+          or hideSelf
+          or hidePlayers
+          or hideFriendly
+          or hideEnemy
+          or hideLocation
+        )
 
-      if hideName then
-        frame.name:SetAlpha(0)
-        -- else
-        --   frame.name:SetAlpha(1)
+      if not hideNPCIndicator then
+        local npcGlow = NS.db.npcs[npcID].glow
+        local changeNameColor = NS.db.npcs[npcID].nameColor == true
+        if changeNameColor then
+          frame.name:SetVertexColor(npcGlow[1], npcGlow[2], npcGlow[3], npcGlow[4])
+        end
       end
+    end
+
+    local hideFriendly = NS.db.arena.names.hideFriendly and (isFriend and isPlayer)
+    local hideEnemy = NS.db.arena.names.hideEnemy and (isEnemy and isPlayer)
+    local hideNPC = NS.db.arena.names.hideNPC and isNPC
+    local hideName = hideFriendly or hideEnemy or hideNPC
+    local hideOutsideArena = not NS.db.arena.showArena and isArena
+    local hideOutsideBattleground = not NS.db.arena.showBattleground and isBattleground
+    local hideOutside = not NS.db.arena.showOutdoors and isOutdoors
+    local hideLocation = true
+    if isArena then
+      hideLocation = hideOutsideArena
+    elseif isBattleground then
+      hideLocation = hideOutsideBattleground
+    elseif isOutdoors then
+      hideLocation = hideOutside
+    end
+
+    if hideLocation then
+      frame.name:SetAlpha(1)
+      return
+    end
+
+    if hideName then
+      frame.name:SetAlpha(0)
+    else
+      frame.name:SetAlpha(1)
     end
   end
 end)
@@ -1283,6 +1614,50 @@ hooksecurefunc(NamePlateDriverFrame, "OnUnitFactionChanged", function(_, unit)
   end)
 end)
 
+-- hooksecurefunc(NamePlateDriverFrame, "OnSoftTargetUpdate", function(self, unit)
+--   local iconSize = tonumber(GetCVar("SoftTargetNameplateSize"))
+--   local doEnemyIcon = GetCVarBool("SoftTargetIconEnemy")
+--   local doFriendIcon = GetCVarBool("SoftTargetIconFriend")
+--   local doInteractIcon = GetCVarBool("SoftTargetIconInteract")
+--   for _, frame in pairs(C_NamePlate.GetNamePlates(issecure())) do
+--     local icon = frame.UnitFrame.SoftTargetFrame.Icon
+--     local hasCursorTexture = false
+--     if iconSize > 0 then
+--       if
+--         (doEnemyIcon and UnitIsUnit(frame.namePlateUnitToken, "softenemy"))
+--         or (doFriendIcon and UnitIsUnit(frame.namePlateUnitToken, "softfriend"))
+--         or (doInteractIcon and UnitIsUnit(frame.namePlateUnitToken, "softinteract"))
+--       then
+--         hasCursorTexture = SetUnitCursorTexture(icon, frame.namePlateUnitToken)
+--       end
+--       if hasCursorTexture and (doInteractIcon and UnitIsUnit(frame.namePlateUnitToken, "softinteract")) then
+--         if UnitGUID(frame.namePlateUnitToken) then
+--           hideHealthBars(frame, UnitGUID(frame.namePlateUnitToken), true)
+--         end
+--       end
+--     end
+
+--     if hasCursorTexture then
+--       icon:Show()
+--     else
+--       icon:Hide()
+--     end
+--   end
+-- end)
+
+-- hooksecurefunc(NamePlateDriverFrame, "OnRaidTargetUpdate", function(self, unit)
+--   for _, frame in pairs(C_NamePlate.GetNamePlates(issecure())) do
+--     local icon = frame.UnitFrame.RaidTargetFrame.RaidTargetIcon
+--     local index = GetRaidTargetIndex(frame.namePlateUnitToken)
+--     if index and not UnitIsUnit("player", frame.namePlateUnitToken) then
+--       SetRaidTargetIconTexture(icon, index)
+--       icon:Show()
+--     else
+--       icon:Hide()
+--     end
+--   end
+-- end)
+
 --[[
 1. timestamp: number
 2. subevent: string
@@ -1298,9 +1673,6 @@ end)
 -- extra for certain subevent types
 --]]
 function NameplateIcons:COMBAT_LOG_EVENT_UNFILTERED()
-  if not IsInInstance() then
-    return
-  end
   local _, subevent, _, sourceGUID, _, _, _, destGUID, _, destFlags = CombatLogGetCurrentEventInfo()
   if not (sourceGUID or destGUID) then
     return
@@ -1448,15 +1820,15 @@ end
 function NameplateIcons:PLAYER_LOGIN()
   NameplateIconsFrame:UnregisterEvent("PLAYER_LOGIN")
 
-  C_NamePlate.SetNamePlateSelfClickThrough(NS.db.general.selfClickThrough)
-  C_NamePlate.SetNamePlateFriendlyClickThrough(NS.db.general.friendlyClickThrough)
-  C_NamePlate.SetNamePlateEnemyClickThrough(NS.db.general.enemyClickThrough)
+  SetNamePlateSelfClickThrough(NS.db.general.selfClickThrough)
+  SetNamePlateFriendlyClickThrough(NS.db.general.friendlyClickThrough)
+  SetNamePlateEnemyClickThrough(NS.db.general.enemyClickThrough)
 
   local loadedOrLoading, loaded = IsAddOnLoaded("OmniCC")
   if not loaded and not loadedOrLoading then
-    SetCVar("countdownForCooldowns", 1)
+    SetCVar("countdownForCooldowns", "1")
   else
-    SetCVar("countdownForCooldowns", 0)
+    SetCVar("countdownForCooldowns", "0")
   end
 
   NameplateIconsFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
@@ -1467,9 +1839,9 @@ end
 NameplateIconsFrame:RegisterEvent("PLAYER_LOGIN")
 
 function NS.OnDbChanged()
-  C_NamePlate.SetNamePlateSelfClickThrough(NS.db.general.selfClickThrough)
-  C_NamePlate.SetNamePlateFriendlyClickThrough(NS.db.general.friendlyClickThrough)
-  C_NamePlate.SetNamePlateEnemyClickThrough(NS.db.general.enemyClickThrough)
+  SetNamePlateSelfClickThrough(NS.db.general.selfClickThrough)
+  SetNamePlateFriendlyClickThrough(NS.db.general.friendlyClickThrough)
+  SetNamePlateEnemyClickThrough(NS.db.general.enemyClickThrough)
 
   refreshNameplates(true)
 end
@@ -1480,7 +1852,6 @@ end
 
 function NS.Options_Setup()
   NS.AceConfig.args.profiles.handler = NS.getOptionsHandler(NS.db, false)
-  NS.AceConfig.args.profiles.order = 4
 
   AceConfig:RegisterOptionsTable(AddonName, NS.AceConfig)
   AceConfigDialog:AddToBlizOptions(AddonName, AddonName)
@@ -1531,3 +1902,117 @@ function NameplateIcons:ADDON_LOADED(addon)
   end
 end
 NameplateIconsFrame:RegisterEvent("ADDON_LOADED")
+
+--[[
+-- Warlock-ReadyShard
+
+-- Vehicle-SilvershardMines-MineCartBlue
+-- Vehicle-SilvershardMines-MineCartRed
+
+-- Vehicle-TempleofKotmogu-CyanBall
+-- Vehicle-TempleofKotmogu-GreenBall
+-- Vehicle-TempleofKotmogu-OrangeBall
+-- Vehicle-TempleofKotmogu-PurpleBall
+
+-- nameplates-icon-orb-green
+-- nameplates-icon-orb-orange
+-- nameplates-icon-orb-purple
+-- nameplates-icon-orb-purple
+
+-- nameplates-icon-cart-alliance
+-- nameplates-icon-cart-horde
+
+-- nameplates-icon-flag-alliance
+-- nameplates-icon-flag-horde
+-- nameplates-icon-flag-neutral
+
+-- orbs-leftIcon1-state1
+-- orbs-leftIcon2-state1
+-- orbs-leftIcon3-state1
+-- orbs-leftIcon4-state1
+-- orbs-rightIcon1-state1
+-- orbs-rightIcon2-state1
+-- orbs-rightIcon3-state1
+-- orbs-rightIcon4-state1
+
+-- ctf_flags-leftIcon1-state1
+-- ctf_flags-leftIcon2-state1
+-- ctf_flags-leftIcon3-state1
+-- ctf_flags-leftIcon4-state1
+-- ctf_flags-leftIcon5-state1
+-- ctf_flags-rightIcon1-state1
+-- ctf_flags-rightIcon2-state1
+-- ctf_flags-rightIcon3-state1
+-- ctf_flags-rightIcon4-state1
+-- ctf_flags-rightIcon5-state1
+
+-- ColumnIcon-FlagCapture0
+-- ColumnIcon-FlagCapture1
+-- ColumnIcon-FlagCapture2
+-- ColumnIcon-FlagReturn0
+-- ColumnIcon-FlagReturn1
+
+-- jailerstower-score-disabled-gem-icon
+-- jailerstower-score-gem-icon
+-- jailerstower-score-gem-tooltipicon
+-- jailerstower-score-gem-anim-flash
+
+-- alliance_icon_and_flag-dynamicIcon
+-- alliance_icon_horde_flag-dynamicIcon
+-- horde_icon_alliance_flag-dynamicIcon
+-- horde_icon_and_flag-dynamicIcon
+
+-- poi-bountyplayer-alliance
+-- poi-bountyplayer-horde
+
+-- Adventures-Target-Indicator
+-- Adventures-Target-Indicator-desat
+-- Azerite-PointingArrow
+-- CovenantSanctum-Renown-DoubleArrow-Depressed
+
+-- MiniMap-DeadArrow
+-- MiniMap-QuestArrow
+-- MiniMap-VignetteArrow
+-- plunderstorm-icon-upgrade -- up arrow
+-- plunderstorm-icon-utility -- lightning bolt
+-- plunderstorm-glues-logoarrow -- down arrow
+
+-- UI-HUD-UnitFrame-Player-Portrait-ClassIcon-DemonHunter
+-- classicon-demonhunter
+-- groupfinder-icon-class-deathknight
+-- groupfinder-icon-class-demonhunter
+-- groupfinder-icon-class-druid
+-- groupfinder-icon-class-hunter
+-- groupfinder-icon-class-mage
+-- groupfinder-icon-class-monk
+-- groupfinder-icon-class-paladin
+-- groupfinder-icon-class-priest
+-- groupfinder-icon-class-rogue
+-- groupfinder-icon-class-shaman
+-- groupfinder-icon-class-warlock
+-- groupfinder-icon-class-warrior
+
+-- XMarksTheSpot -- X
+-- UpgradeItem-32x32 -- sword
+-- Ping_Map_Whole_Assist -- flag
+
+-- leader
+-- plunderstorm-glues-icon-leader
+-- UI-LFG-RoleIcon-Leader
+
+-- roleicon-tiny-healer
+-- healer
+-- Adventure-heal-indicator
+-- ui_adv_health
+-- Adventures-Healer
+-- bags-icon-addslots
+-- Bags-icon-AddAuthenticator
+-- UI-LFG-RoleIcon-Healer
+-- groupfinder-icon-role-large-heal
+-- GreenCross
+-- runecarving-icon-power-empty
+-- Icon-Healer
+-- HealerBadge
+
+-- local isLeader = UnitIsGroupLeader(unit)
+]]

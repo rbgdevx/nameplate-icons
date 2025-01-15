@@ -5,18 +5,28 @@ local AddonName, NS = ...
 ---------------------------------------------------------------------------------------------------
 
 -- Lua APIs
-local string, tonumber, pairs = string, tonumber, pairs
+local CreateFrame = CreateFrame
+local tonumber = tonumber
+local pairs = pairs
 
 -- WoW APIs
 local UnitName = UnitName
 local UnitExists = UnitExists
-local IsInRaid, IsInGroup, GetNumGroupMembers, GetNumSubgroupMembers =
-  IsInRaid, IsInGroup, GetNumGroupMembers, GetNumSubgroupMembers
-local wipe = wipe
+local IsInRaid = IsInRaid
+local IsInGroup = IsInGroup
+local GetNumGroupMembers = GetNumGroupMembers
+local GetNumSubgroupMembers = GetNumSubgroupMembers
+
+local smatch = string.match
+local twipe = table.wipe
+local sfind = string.find
+local sgsub = string.gsub
 
 local RequestLoadQuestByID = C_QuestLog.RequestLoadQuestByID
-local GetQuestObjectives, GetQuestInfo = C_QuestLog.GetQuestObjectives, C_QuestLog.GetInfo
-local GetLogIndexForQuestID, GetNumQuestLogEntries = C_QuestLog.GetLogIndexForQuestID, C_QuestLog.GetNumQuestLogEntries
+local GetQuestObjectives = C_QuestLog.GetQuestObjectives
+local GetQuestInfo = C_QuestLog.GetInfo
+local GetLogIndexForQuestID = C_QuestLog.GetLogIndexForQuestID
+local GetNumQuestLogEntries = C_QuestLog.GetNumQuestLogEntries
 local C_TooltipInfo_GetUnit = C_TooltipInfo and C_TooltipInfo.GetUnit
 
 -- ThreatPlates APIs
@@ -46,10 +56,10 @@ NS.Quest.frame = QuestFrame
 -- In Shadowlands, it seems that the format is randomly changed, at least for German, so check for
 -- everything as a backup
 local QUEST_OBJECTIVE_PARSER_LEFT = function(text)
-  local current, goal, objective_name = string.match(text, "^(%d+)/(%d+)( .*)$")
+  local current, goal, objective_name = smatch(text, "^(%d+)/(%d+)( .*)$")
 
   if not objective_name then
-    objective_name, current, goal = string.match(text, "^(.*: )(%d+)/(%d+)$")
+    objective_name, current, goal = smatch(text, "^(.*: )(%d+)/(%d+)$")
   end
 
   return objective_name, current, goal
@@ -57,11 +67,11 @@ end
 
 local QUEST_OBJECTIVE_PARSER_RIGHT = function(text)
   -- Quest objective: Versucht, zu kommunizieren: 0/1
-  local objective_name, current, goal = string.match(text, "^(.*: )(%d+)/(%d+)$")
+  local objective_name, current, goal = smatch(text, "^(.*: )(%d+)/(%d+)$")
 
   if not objective_name then
     -- Quest objective: 0/1 Besucht die Halle der Kuriositäten
-    current, goal, objective_name = string.match(text, "^(%d+)/(%d+)( .*)$")
+    current, goal, objective_name = smatch(text, "^(%d+)/(%d+)( .*)$")
   end
 
   return objective_name, current, goal
@@ -122,8 +132,8 @@ NS.IsQuestUnit = function(unit)
       local objective_type = "false"
 
       -- Check if area / progress quest
-      if string.find(text, "%%") then
-        objective_name, current, goal = string.match(text, "^(.*) %(?(%d+)%%%)?$")
+      if sfind(text, "%%") then
+        objective_name, current, goal = smatch(text, "^(.*) %(?(%d+)%%%)?$")
         objective_type = "area"
       else
         -- Standard x/y /pe quest
@@ -182,7 +192,7 @@ local function CacheQuestObjectives(quest)
     -- Does not make sense to add "progressbar" type quests here as there progress is not
     -- updated via QUEST_WATCH_UPDATE
     if objective.text and objective.type ~= "progressbar" then
-      local objective_name = string.gsub(objective.text, "(%d+)/(%d+)", "")
+      local objective_name = sgsub(objective.text, "(%d+)/(%d+)", "")
       -- Normally, the quest objective should come before the :, but while the QUEST_LOG_UPDATE events (after login/reload)
 
       -- It does seem that this is no longer necessary
@@ -307,7 +317,7 @@ end
 function Quest:GROUP_ROSTER_UPDATE()
   local group_size = (IsInRaid() and GetNumGroupMembers()) or (IsInGroup() and GetNumSubgroupMembers()) or 0
 
-  wipe(GroupMembers)
+  twipe(GroupMembers)
 
   if group_size > 0 then
     local group_type = (IsInRaid() and "raid") or IsInGroup() and "party" or "solo"
@@ -321,7 +331,7 @@ function Quest:GROUP_ROSTER_UPDATE()
 end
 
 function Quest:GROUP_LEFT()
-  wipe(GroupMembers)
+  twipe(GroupMembers)
 end
 
 ---------------------------------------------------------------------------------------------------
@@ -334,6 +344,7 @@ function Quest:OnEnable()
   QuestFrame:RegisterEvent("QUEST_ACCEPTED")
   QuestFrame:RegisterEvent("QUEST_DATA_LOAD_RESULT")
   QuestFrame:RegisterEvent("QUEST_LOG_UPDATE")
+
   -- QUEST_REMOVED fires whenever the player turns in a quest, whether automatically with a Task-type quest
   -- (Bonus Objectives/World Quests), or by pressing the Complete button in a quest dialog window.
   -- also handles abandon quest

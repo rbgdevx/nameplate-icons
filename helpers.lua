@@ -9,23 +9,24 @@ local type = type
 local next = next
 local pairs = pairs
 local ipairs = ipairs
-local wipe = wipe
-local getmetatable = getmetatable
-local setmetatable = setmetatable
 
+---@type fun(): boolean
 NS.isInGroup = function()
   return IsInRaid() or IsInGroup()
 end
 
+---@type fun(unit: string): boolean
 NS.isHealer = function(unit)
   return UnitGroupRolesAssigned(unit) == "HEALER"
 end
 
 -- Function to assist iterating group members whether in a party or raid.
+--- @type fun(reversed: boolean?, forceParty: boolean?): function
 NS.IterateGroupMembers = function(reversed, forceParty)
   local unit = (not forceParty and IsInRaid()) and "raid" or "party"
   local numGroupMembers = unit == "party" and GetNumSubgroupMembers() or GetNumGroupMembers()
   local i = reversed and numGroupMembers or (unit == "party" and 0 or 1)
+  --- @type fun(): string
   return function()
     local ret
     if i == 0 and unit == "party" then
@@ -38,6 +39,7 @@ NS.IterateGroupMembers = function(reversed, forceParty)
   end
 end
 
+--- @type fun(list: string[], npcID: string): boolean
 NS.isNPCInList = function(list, npcID)
   for _, id in ipairs(list) do
     if id == npcID then
@@ -106,27 +108,4 @@ NS.CleanupDB = function(src, dst)
     end
   end
   return dst
-end
-
--- Pool for reusing tables. (Garbage collector isn't ran in combat unless max garbage is reached, which causes fps drops)
-do
-  local pool = {}
-
-  NS.NewTable = function()
-    local t = next(pool) or {}
-    pool[t] = nil -- remove from pool
-    return t
-  end
-
-  NS.RemoveTable = function(tbl)
-    if tbl then
-      pool[wipe(tbl)] = true -- add to pool, wipe returns pointer to tbl here
-    end
-  end
-
-  NS.ReleaseTables = function()
-    if next(pool) then
-      pool = {}
-    end
-  end
 end
