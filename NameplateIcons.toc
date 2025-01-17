@@ -4,6 +4,12 @@
 ## Author: RBGDEV
 ## Notes: Shows icons on nameplates
 ## SavedVariables: NameplateIconsDB
+## X-Category: UnitFrame
+## X-License: All Rights Reserved
+## X-Website: https://www.curseforge.com/wow/addons/nameplate-icons
+## X-Curse-Project-ID: 1180520
+## X-Wago-ID: aNDmV86o
+## X-WoWI-ID: 26891
 
 #@no-lib-strip@
 embeds.xml

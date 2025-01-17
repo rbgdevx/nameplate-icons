@@ -829,10 +829,56 @@ local AceConfig = {
               order = 17,
               width = "full",
             },
+            offsetX = {
+              name = "Offset X",
+              type = "range",
+              order = 18,
+              width = 1.2,
+              isPercent = false,
+              min = -100,
+              max = 100,
+              step = 1,
+              disabled = function(_)
+                return not NS.db.healer.enabled
+              end,
+              get = function(_)
+                return NS.db.healer.offsetX
+              end,
+              set = function(_, val)
+                NS.db.healer.offsetX = val
+                NS.OnDbChanged()
+              end,
+            },
+            offsetY = {
+              name = "Offset Y",
+              type = "range",
+              order = 19,
+              width = 1.2,
+              isPercent = false,
+              min = -100,
+              max = 100,
+              step = 1,
+              disabled = function(_)
+                return not NS.db.healer.enabled
+              end,
+              get = function(_)
+                return NS.db.healer.offsetY
+              end,
+              set = function(_, val)
+                NS.db.healer.offsetY = val
+                NS.OnDbChanged()
+              end,
+            },
+            spacer7 = {
+              name = "",
+              type = "description",
+              order = 20,
+              width = "full",
+            },
             scale = {
               name = "Scale",
               type = "range",
-              order = 18,
+              order = 21,
               width = 1.75,
               isPercent = false,
               min = 0.5,
@@ -849,22 +895,22 @@ local AceConfig = {
                 NS.OnDbChanged()
               end,
             },
-            spacer7 = {
+            spacer8 = {
               name = " ",
               type = "description",
-              order = 19,
+              order = 22,
               width = "full",
             },
             iconDesc = {
               name = "Icon:",
               type = "description",
-              order = 20,
+              order = 23,
               width = "full",
             },
             iconImage = {
               name = " ",
               type = "description",
-              order = 21,
+              order = 24,
               image = function(info)
                 return "roleicon-tiny-healerxatlas"
               end,
@@ -1472,7 +1518,7 @@ local AceConfig = {
         },
       },
     },
-    nameplates = {
+    nameplate = {
       name = "Nameplates",
       type = "group",
       order = 3,
@@ -1490,10 +1536,10 @@ local AceConfig = {
           order = 2,
           width = 0.4,
           get = function(_)
-            return NS.db.arena.showArena
+            return NS.db.nameplate.showArena
           end,
           set = function(_, val)
-            NS.db.arena.showArena = val
+            NS.db.nameplate.showArena = val
             NS.OnDbChanged()
           end,
         },
@@ -1503,10 +1549,10 @@ local AceConfig = {
           order = 3,
           width = 0.7,
           get = function(_)
-            return NS.db.arena.showBattleground
+            return NS.db.nameplate.showBattleground
           end,
           set = function(_, val)
-            NS.db.arena.showBattleground = val
+            NS.db.nameplate.showBattleground = val
             NS.OnDbChanged()
           end,
         },
@@ -1516,10 +1562,10 @@ local AceConfig = {
           order = 4,
           width = 0.5,
           get = function(_)
-            return NS.db.arena.showOutdoors
+            return NS.db.nameplate.showOutdoors
           end,
           set = function(_, val)
-            NS.db.arena.showOutdoors = val
+            NS.db.nameplate.showOutdoors = val
             NS.OnDbChanged()
           end,
         },
@@ -1529,7 +1575,9 @@ local AceConfig = {
           inline = true,
           order = 5,
           disabled = function(_)
-            return not NS.db.arena.showArena and not NS.db.arena.showBattleground and not NS.db.arena.showOutdoors
+            return not NS.db.nameplate.showArena
+              and not NS.db.nameplate.showBattleground
+              and not NS.db.nameplate.showOutdoors
           end,
           args = {
             healthBars = {
@@ -1538,10 +1586,10 @@ local AceConfig = {
               width = 1.5,
               order = 1,
               get = function(_)
-                return NS.db.arena.healthBars.hideFriendly
+                return NS.db.nameplate.healthBars.hideFriendly
               end,
               set = function(_, val)
-                NS.db.arena.healthBars.hideFriendly = val
+                NS.db.nameplate.healthBars.hideFriendly = val
                 NS.OnDbChanged()
               end,
             },
@@ -1551,10 +1599,10 @@ local AceConfig = {
               width = 1.5,
               order = 2,
               get = function(_)
-                return NS.db.arena.names.hideFriendly
+                return NS.db.nameplate.names.hideFriendly
               end,
               set = function(_, val)
-                NS.db.arena.names.hideFriendly = val
+                NS.db.nameplate.names.hideFriendly = val
                 NS.OnDbChanged()
               end,
             },
@@ -1564,10 +1612,10 @@ local AceConfig = {
               width = 1.5,
               order = 3,
               get = function(_)
-                return NS.db.arena.castBars.hideFriendly
+                return NS.db.nameplate.castBars.hideFriendly
               end,
               set = function(_, val)
-                NS.db.arena.castBars.hideFriendly = val
+                NS.db.nameplate.castBars.hideFriendly = val
                 NS.OnDbChanged()
               end,
             },
@@ -1577,10 +1625,10 @@ local AceConfig = {
               width = 1.5,
               order = 4,
               get = function(_)
-                return NS.db.arena.buffFrames.hideFriendly
+                return NS.db.nameplate.buffFrames.hideFriendly
               end,
               set = function(_, val)
-                NS.db.arena.buffFrames.hideFriendly = val
+                NS.db.nameplate.buffFrames.hideFriendly = val
                 NS.OnDbChanged()
               end,
             },
@@ -1592,7 +1640,9 @@ local AceConfig = {
           inline = true,
           order = 6,
           disabled = function(_)
-            return not NS.db.arena.showArena and not NS.db.arena.showBattleground and not NS.db.arena.showOutdoors
+            return not NS.db.nameplate.showArena
+              and not NS.db.nameplate.showBattleground
+              and not NS.db.nameplate.showOutdoors
           end,
           args = {
             healthBars = {
@@ -1601,10 +1651,10 @@ local AceConfig = {
               width = 1.5,
               order = 1,
               get = function(_)
-                return NS.db.arena.healthBars.hideEnemy
+                return NS.db.nameplate.healthBars.hideEnemy
               end,
               set = function(_, val)
-                NS.db.arena.healthBars.hideEnemy = val
+                NS.db.nameplate.healthBars.hideEnemy = val
                 NS.OnDbChanged()
               end,
             },
@@ -1614,10 +1664,10 @@ local AceConfig = {
               width = 1.5,
               order = 2,
               get = function(_)
-                return NS.db.arena.names.hideEnemy
+                return NS.db.nameplate.names.hideEnemy
               end,
               set = function(_, val)
-                NS.db.arena.names.hideEnemy = val
+                NS.db.nameplate.names.hideEnemy = val
                 NS.OnDbChanged()
               end,
             },
@@ -1627,10 +1677,10 @@ local AceConfig = {
               width = 1.5,
               order = 3,
               get = function(_)
-                return NS.db.arena.castBars.hideEnemy
+                return NS.db.nameplate.castBars.hideEnemy
               end,
               set = function(_, val)
-                NS.db.arena.castBars.hideEnemy = val
+                NS.db.nameplate.castBars.hideEnemy = val
                 NS.OnDbChanged()
               end,
             },
@@ -1640,10 +1690,10 @@ local AceConfig = {
               width = 1.5,
               order = 4,
               get = function(_)
-                return NS.db.arena.buffFrames.hideEnemy
+                return NS.db.nameplate.buffFrames.hideEnemy
               end,
               set = function(_, val)
-                NS.db.arena.buffFrames.hideEnemy = val
+                NS.db.nameplate.buffFrames.hideEnemy = val
                 NS.OnDbChanged()
               end,
             },
@@ -1655,7 +1705,9 @@ local AceConfig = {
           inline = true,
           order = 7,
           disabled = function(_)
-            return not NS.db.arena.showArena and not NS.db.arena.showBattleground and not NS.db.arena.showOutdoors
+            return not NS.db.nameplate.showArena
+              and not NS.db.nameplate.showBattleground
+              and not NS.db.nameplate.showOutdoors
           end,
           args = {
             healthBars = {
@@ -1664,10 +1716,10 @@ local AceConfig = {
               width = 1.5,
               order = 1,
               get = function(_)
-                return NS.db.arena.healthBars.hideNPC
+                return NS.db.nameplate.healthBars.hideNPC
               end,
               set = function(_, val)
-                NS.db.arena.healthBars.hideNPC = val
+                NS.db.nameplate.healthBars.hideNPC = val
                 NS.OnDbChanged()
               end,
             },
@@ -1677,10 +1729,10 @@ local AceConfig = {
               width = 1.5,
               order = 2,
               get = function(_)
-                return NS.db.arena.names.hideNPC
+                return NS.db.nameplate.names.hideNPC
               end,
               set = function(_, val)
-                NS.db.arena.names.hideNPC = val
+                NS.db.nameplate.names.hideNPC = val
                 NS.OnDbChanged()
               end,
             },
@@ -1690,10 +1742,10 @@ local AceConfig = {
               width = 1.5,
               order = 3,
               get = function(_)
-                return NS.db.arena.castBars.hideNPC
+                return NS.db.nameplate.castBars.hideNPC
               end,
               set = function(_, val)
-                NS.db.arena.castBars.hideNPC = val
+                NS.db.nameplate.castBars.hideNPC = val
                 NS.OnDbChanged()
               end,
             },
@@ -1703,10 +1755,10 @@ local AceConfig = {
               width = 1.5,
               order = 4,
               get = function(_)
-                return NS.db.arena.buffFrames.hideNPC
+                return NS.db.nameplate.buffFrames.hideNPC
               end,
               set = function(_, val)
-                NS.db.arena.buffFrames.hideNPC = val
+                NS.db.nameplate.buffFrames.hideNPC = val
                 NS.OnDbChanged()
               end,
             },

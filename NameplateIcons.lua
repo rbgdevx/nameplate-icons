@@ -232,13 +232,13 @@ local function hideBuffFrames(nameplate, guid)
   local isBattleground = NameplateIconsFrame.inBattleground
   local isOutdoors = NameplateIconsFrame.isOutdoors
 
-  local hideFriendly = NS.db.arena.buffFrames.hideFriendly and (isFriend and isPlayer)
-  local hideEnemy = NS.db.arena.buffFrames.hideEnemy and (isEnemy and isPlayer)
-  local hideNPC = NS.db.arena.buffFrames.hideNPC and isNPC
+  local hideFriendly = NS.db.nameplate.buffFrames.hideFriendly and (isFriend and isPlayer)
+  local hideEnemy = NS.db.nameplate.buffFrames.hideEnemy and (isEnemy and isPlayer)
+  local hideNPC = NS.db.nameplate.buffFrames.hideNPC and isNPC
   local hideBuffFrame = hideFriendly or hideEnemy or hideNPC
-  local hideOutsideArena = not NS.db.arena.showArena and isArena
-  local hideOutsideBattleground = not NS.db.arena.showBattleground and isBattleground
-  local hideOutside = not NS.db.arena.showOutdoors and isOutdoors
+  local hideOutsideArena = not NS.db.nameplate.showArena and isArena
+  local hideOutsideBattleground = not NS.db.nameplate.showBattleground and isBattleground
+  local hideOutside = not NS.db.nameplate.showOutdoors and isOutdoors
   local hideLocation = true
   if isArena then
     hideLocation = hideOutsideArena
@@ -275,13 +275,13 @@ local function hideCastBars(nameplate, guid)
   local isBattleground = NameplateIconsFrame.inBattleground
   local isOutdoors = NameplateIconsFrame.isOutdoors
 
-  local hideFriendly = NS.db.arena.castBars.hideFriendly and (isFriend and isPlayer)
-  local hideEnemy = NS.db.arena.castBars.hideEnemy and (isEnemy and isPlayer)
-  local hideNPC = NS.db.arena.castBars.hideNPC and isNPC
+  local hideFriendly = NS.db.nameplate.castBars.hideFriendly and (isFriend and isPlayer)
+  local hideEnemy = NS.db.nameplate.castBars.hideEnemy and (isEnemy and isPlayer)
+  local hideNPC = NS.db.nameplate.castBars.hideNPC and isNPC
   local hideCastBar = hideFriendly or hideEnemy or hideNPC
-  local hideOutsideArena = not NS.db.arena.showArena and isArena
-  local hideOutsideBattleground = not NS.db.arena.showBattleground and isBattleground
-  local hideOutside = not NS.db.arena.showOutdoors and isOutdoors
+  local hideOutsideArena = not NS.db.nameplate.showArena and isArena
+  local hideOutsideBattleground = not NS.db.nameplate.showBattleground and isBattleground
+  local hideOutside = not NS.db.nameplate.showOutdoors and isOutdoors
   local hideLocation = true
   if isArena then
     hideLocation = hideOutsideArena
@@ -318,13 +318,13 @@ local function hideNames(nameplate, guid)
   local isBattleground = NameplateIconsFrame.inBattleground
   local isOutdoors = NameplateIconsFrame.isOutdoors
 
-  local hideFriendly = NS.db.arena.names.hideFriendly and (isFriend and isPlayer)
-  local hideEnemy = NS.db.arena.names.hideEnemy and (isEnemy and isPlayer)
-  local hideNPC = NS.db.arena.names.hideNPC and isNPC
+  local hideFriendly = NS.db.nameplate.names.hideFriendly and (isFriend and isPlayer)
+  local hideEnemy = NS.db.nameplate.names.hideEnemy and (isEnemy and isPlayer)
+  local hideNPC = NS.db.nameplate.names.hideNPC and isNPC
   local hideName = hideFriendly or hideEnemy or hideNPC
-  local hideOutsideArena = not NS.db.arena.showArena and isArena
-  local hideOutsideBattleground = not NS.db.arena.showBattleground and isBattleground
-  local hideOutside = not NS.db.arena.showOutdoors and isOutdoors
+  local hideOutsideArena = not NS.db.nameplate.showArena and isArena
+  local hideOutsideBattleground = not NS.db.nameplate.showBattleground and isBattleground
+  local hideOutside = not NS.db.nameplate.showOutdoors and isOutdoors
   local hideLocation = true
   if isArena then
     hideLocation = hideOutsideArena
@@ -361,13 +361,13 @@ local function hideHealthBars(nameplate, guid)
   local isBattleground = NameplateIconsFrame.inBattleground
   local isOutdoors = NameplateIconsFrame.isOutdoors
 
-  local hideFriendly = NS.db.arena.healthBars.hideFriendly and (isFriend and isPlayer)
-  local hideEnemy = NS.db.arena.healthBars.hideEnemy and (isEnemy and isPlayer)
-  local hideNPC = NS.db.arena.healthBars.hideNPC and isNPC
+  local hideFriendly = NS.db.nameplate.healthBars.hideFriendly and (isFriend and isPlayer)
+  local hideEnemy = NS.db.nameplate.healthBars.hideEnemy and (isEnemy and isPlayer)
+  local hideNPC = NS.db.nameplate.healthBars.hideNPC and isNPC
   local hideHealthBar = hideFriendly or hideEnemy or hideNPC
-  local hideOutsideArena = not NS.db.arena.showArena and isArena
-  local hideOutsideBattleground = not NS.db.arena.showBattleground and isBattleground
-  local hideOutside = not NS.db.arena.showOutdoors and isOutdoors
+  local hideOutsideArena = not NS.db.nameplate.showArena and isArena
+  local hideOutsideBattleground = not NS.db.nameplate.showBattleground and isBattleground
+  local hideOutside = not NS.db.nameplate.showOutdoors and isOutdoors
   local hideLocation = true
   if isArena then
     hideLocation = hideOutsideArena
@@ -783,16 +783,16 @@ local function addNPCIndicator(nameplate, guid)
   nameplate.nphNPCIndicator:Show()
 
   do
-    local showArenas = NS.db.arena.showArena and isArena
-    local showBattlegrounds = NS.db.arena.showBattleground and isBattleground
-    local showOutdoors = NS.db.arena.showOutdoors and isOutdoors
+    local showArenas = NS.db.nameplate.showArena and isArena
+    local showBattlegrounds = NS.db.nameplate.showBattleground and isBattleground
+    local showOutdoors = NS.db.nameplate.showOutdoors and isOutdoors
 
     nameplate.nphNPCIndicator.texture:SetIgnoreParentScale(NS.db.general.ignoreNameplateScale)
     -- NEED TO CHANGE THIS TO IGNORE ALPHA WHEN HIDING HEALTHBARS
     if showArenas or showBattlegrounds or showOutdoors then
-      if isFriend and NS.db.arena.healthBars.hideFriendly then
+      if isFriend and NS.db.nameplate.healthBars.hideFriendly then
         nameplate.nphNPCIndicator.texture:SetIgnoreParentAlpha(true)
-      elseif isEnemy and NS.db.arena.healthBars.hideEnemy then
+      elseif isEnemy and NS.db.nameplate.healthBars.hideEnemy then
         nameplate.nphNPCIndicator.texture:SetIgnoreParentAlpha(true)
       else
         nameplate.nphNPCIndicator.texture:SetIgnoreParentAlpha(NS.db.general.ignoreNameplateAlpha)
@@ -822,9 +822,9 @@ local function addNPCIndicator(nameplate, guid)
     nameplate.nphNPCIndicator.glowTexture:SetIgnoreParentScale(NS.db.general.ignoreNameplateScale)
     -- NEED TO CHANGE THIS TO IGNORE ALPHA WHEN HIDING HEALTHBARS
     if showArenas or showBattlegrounds or showOutdoors then
-      if isFriend and NS.db.arena.healthBars.hideFriendly then
+      if isFriend and NS.db.nameplate.healthBars.hideFriendly then
         nameplate.nphNPCIndicator.glowTexture:SetIgnoreParentAlpha(true)
-      elseif isEnemy and NS.db.arena.healthBars.hideEnemy then
+      elseif isEnemy and NS.db.nameplate.healthBars.hideEnemy then
         nameplate.nphNPCIndicator.glowTexture:SetIgnoreParentAlpha(true)
       else
         nameplate.nphNPCIndicator.glowTexture:SetIgnoreParentAlpha(NS.db.general.ignoreNameplateAlpha)
@@ -968,11 +968,13 @@ local function addHealerIndicator(nameplate, guid)
   local hasRaidMarker = not isSelf and GetRaidTargetIndex(unit)
   -- local hasOneIcon = hasObjective or hasRaidMarker
   -- local hasTwoIcons = hasObjective and hasRaidMarker
-  local offsetLeft = NS.db.healer.attachToHealthBar and 8 or (hasRaidMarker and -30 or hasObjective and -5 or 0)
-  local offsetRight = NS.db.healer.attachToHealthBar and -8 or 0
+  local raidMarketOffsetX = hasRaidMarker and (-30 + NS.db.healer.offsetX) or NS.db.healer.offsetX
+  local objectiveOffsetX = hasObjective and (-5 + NS.db.healer.offsetX) or NS.db.healer.offsetX
+  local offsetLeft = NS.db.healer.attachToHealthBar and NS.db.healer.offsetX or (raidMarketOffsetX or objectiveOffsetX)
+  local offsetRight = NS.db.healer.offsetX
   local offset = {
     x = NS.db.healer.position == "LEFT" and offsetLeft or offsetRight,
-    y = 0,
+    y = NS.db.healer.offsetY,
   }
   local point = NS.db.healer.position == "LEFT" and "RIGHT" or "LEFT"
   local relativePoint = NS.db.healer.position == "LEFT" and "LEFT" or "RIGHT"
@@ -1028,13 +1030,13 @@ local function addClassIndicator(nameplate, guid)
 
   nameplate.nphClassIndicator.texture:SetIgnoreParentScale(NS.db.general.ignoreNameplateScale)
   -- NEED TO CHANGE THIS TO IGNORE ALPHA WHEN HIDING HEALTHBARS
-  local showArenas = NS.db.arena.showArena and isArena
-  local showBattlegrounds = NS.db.arena.showBattleground and isBattleground
-  local showOutdoors = NS.db.arena.showOutdoors and isOutdoors
+  local showArenas = NS.db.nameplate.showArena and isArena
+  local showBattlegrounds = NS.db.nameplate.showBattleground and isBattleground
+  local showOutdoors = NS.db.nameplate.showOutdoors and isOutdoors
   if showArenas or showBattlegrounds or showOutdoors then
-    if isFriend and NS.db.arena.healthBars.hideFriendly then
+    if isFriend and NS.db.nameplate.healthBars.hideFriendly then
       nameplate.nphClassIndicator.texture:SetIgnoreParentAlpha(true)
-    elseif isEnemy and NS.db.arena.healthBars.hideEnemy then
+    elseif isEnemy and NS.db.nameplate.healthBars.hideEnemy then
       nameplate.nphClassIndicator.texture:SetIgnoreParentAlpha(true)
     else
       nameplate.nphClassIndicator.texture:SetIgnoreParentAlpha(NS.db.general.ignoreNameplateAlpha)
@@ -1144,13 +1146,13 @@ local function addArrowIndicator(nameplate, guid)
 
   nameplate.nphArrowIndicator.texture:SetIgnoreParentScale(NS.db.general.ignoreNameplateScale)
   -- NEED TO CHANGE THIS TO IGNORE ALPHA WHEN HIDING HEALTHBARS
-  local showArenas = NS.db.arena.showArena and isArena
-  local showBattlegrounds = NS.db.arena.showBattleground and isBattleground
-  local showOutdoors = NS.db.arena.showOutdoors and isOutdoors
+  local showArenas = NS.db.nameplate.showArena and isArena
+  local showBattlegrounds = NS.db.nameplate.showBattleground and isBattleground
+  local showOutdoors = NS.db.nameplate.showOutdoors and isOutdoors
   if showArenas or showBattlegrounds or showOutdoors then
-    if isFriend and NS.db.arena.healthBars.hideFriendly then
+    if isFriend and NS.db.nameplate.healthBars.hideFriendly then
       nameplate.nphArrowIndicator.texture:SetIgnoreParentAlpha(true)
-    elseif isEnemy and NS.db.arena.healthBars.hideEnemy then
+    elseif isEnemy and NS.db.nameplate.healthBars.hideEnemy then
       nameplate.nphArrowIndicator.texture:SetIgnoreParentAlpha(true)
     else
       nameplate.nphArrowIndicator.texture:SetIgnoreParentAlpha(NS.db.general.ignoreNameplateAlpha)
@@ -1554,13 +1556,13 @@ hooksecurefunc("CompactUnitFrame_UpdateName", function(frame)
       end
     end
 
-    local hideFriendly = NS.db.arena.names.hideFriendly and (isFriend and isPlayer)
-    local hideEnemy = NS.db.arena.names.hideEnemy and (isEnemy and isPlayer)
-    local hideNPC = NS.db.arena.names.hideNPC and isNPC
+    local hideFriendly = NS.db.nameplate.names.hideFriendly and (isFriend and isPlayer)
+    local hideEnemy = NS.db.nameplate.names.hideEnemy and (isEnemy and isPlayer)
+    local hideNPC = NS.db.nameplate.names.hideNPC and isNPC
     local hideName = hideFriendly or hideEnemy or hideNPC
-    local hideOutsideArena = not NS.db.arena.showArena and isArena
-    local hideOutsideBattleground = not NS.db.arena.showBattleground and isBattleground
-    local hideOutside = not NS.db.arena.showOutdoors and isOutdoors
+    local hideOutsideArena = not NS.db.nameplate.showArena and isArena
+    local hideOutsideBattleground = not NS.db.nameplate.showBattleground and isBattleground
+    local hideOutside = not NS.db.nameplate.showOutdoors and isOutdoors
     local hideLocation = true
     if isArena then
       hideLocation = hideOutsideArena

@@ -40,7 +40,7 @@ NS.NameplateIcons.frame = NameplateIconsFrame
 ---@field healthColor boolean
 ---@field nameColor boolean
 
----@class NameplateConfig : table
+---@class VisibilityConfig : table
 ---@field hideFriendly boolean
 ---@field hideEnemy boolean
 ---@field hideNPC boolean
@@ -52,14 +52,14 @@ NS.NameplateIcons.frame = NameplateIconsFrame
 ---@field friendlyClickThrough boolean
 ---@field enemyClickThrough boolean
 
----@class ArenaConfig : table
+---@class NameplateConfig : table
 ---@field showArena boolean
 ---@field showBattleground boolean
 ---@field showOutdoors boolean
----@field healthBars NameplateConfig
----@field names NameplateConfig
----@field castBars NameplateConfig
----@field buffFrames NameplateConfig
+---@field healthBars VisibilityConfig
+---@field names VisibilityConfig
+---@field castBars VisibilityConfig
+---@field buffFrames VisibilityConfig
 
 ---@class ArrowConfig : table
 ---@field test boolean
@@ -100,6 +100,8 @@ NS.NameplateIcons.frame = NameplateIconsFrame
 ---@field scale number
 ---@field position "LEFT"|"RIGHT"
 ---@field attachToHealthBar boolean
+---@field offsetX number
+---@field offsetY number
 
 ---@class NPCConfig : table
 ---@field test boolean
@@ -127,7 +129,7 @@ NS.NameplateIcons.frame = NameplateIconsFrame
 
 ---@class Database : table
 ---@field general GeneralConfig
----@field arena ArenaConfig
+---@field nameplate NameplateConfig
 ---@field arrow ArrowConfig
 ---@field class ClassConfig
 ---@field healer HealerConfig
@@ -435,11 +437,11 @@ DefaultDatabase = {
   general = {
     ignoreNameplateAlpha = false,
     ignoreNameplateScale = false,
-    selfClickThrough = true,
+    selfClickThrough = false,
     friendlyClickThrough = false,
     enemyClickThrough = false,
   },
-  arena = {
+  nameplate = {
     showArena = false,
     showBattleground = false,
     showOutdoors = false,
@@ -503,6 +505,8 @@ DefaultDatabase = {
     scale = 1.25,
     position = "LEFT", -- left/right
     attachToHealthBar = false,
+    offsetX = 0,
+    offsetY = 0,
   },
   npc = {
     test = false,
@@ -531,7 +535,7 @@ DefaultDatabase = {
   npcs = {},
 }
 
---- @type table<string, MyNPCInfo>
+--- @type { [string]: MyNPCInfo }[]
 local npcList = {}
 
 ---@param npcId string
@@ -556,7 +560,7 @@ end
 tsort(npcList, NS.SortListByName)
 
 for i = 1, #npcList do
-  ---@type MyNPCInfo
+  --- @type { [string]: NpcInfo }
   local npc = npcList[i]
   if npc then
     --- @type string, MyNPCInfo
