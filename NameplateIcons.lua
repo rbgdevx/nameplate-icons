@@ -23,7 +23,6 @@ local UnitGUID = UnitGUID
 local select = select
 local ipairs = ipairs
 local LibStub = LibStub
-local CombatLogGetCurrentEventInfo = CombatLogGetCurrentEventInfo
 local next = next
 local GetTime = GetTime
 local UnitPvpClassification = UnitPvpClassification
@@ -31,9 +30,7 @@ local GetRaidTargetIndex = GetRaidTargetIndex
 local unpack = unpack
 
 local ssplit = string.split
-local sfind = string.find
 local smatch = string.match
-local bband = bit.band
 local mrad = math.rad
 
 local IsAddOnLoaded = C_AddOns.IsAddOnLoaded
@@ -46,8 +43,6 @@ local SetNamePlateSelfClickThrough = C_NamePlate.SetNamePlateSelfClickThrough
 local SetNamePlateFriendlyClickThrough = C_NamePlate.SetNamePlateFriendlyClickThrough
 local SetNamePlateEnemyClickThrough = C_NamePlate.SetNamePlateEnemyClickThrough
 local SetCVar = C_CVar.SetCVar
-
-local COMBATLOG_OBJECT_TYPE_PLAYER = COMBATLOG_OBJECT_TYPE_PLAYER
 
 local AceConfig = LibStub("AceConfig-4.0")
 local AceConfigDialog = LibStub("AceConfigDialog-4.0")
@@ -77,76 +72,19 @@ local HEALER_SPECS = {
   ["Discipline Priest"] = 256,
   ["Preservation Evoker"] = 1468,
 }
-local HEALER_SPELL_EVENTS = {
-  ["SPELL_HEAL"] = true,
-  ["SPELL_AURA_APPLIED"] = true,
-  ["SPELL_CAST_START"] = true,
-  ["SPELL_CAST_SUCCESS"] = true,
-  ["SPELL_EMPOWER_START"] = true,
-  ["SPELL_EMPOWER_END"] = true,
-  ["SPELL_PERIODIC_HEAL"] = true,
-}
-local HEALER_SPELLS = {
-  -- Holy Priest
-  [2060] = "PRIEST", -- Heal
-  [14914] = "PRIEST", -- Holy Fire
-  [596] = "PRIEST", -- Prayer of Healing
-  [204883] = "PRIEST", -- Circle of Healing
-  [289666] = "PRIEST", -- Greater Heal
-  -- Discipline Priest
-  [47540] = "PRIEST", -- Penance
-  [194509] = "PRIEST", -- Power Word: Radiance
-  [214621] = "PRIEST", -- Schism
-  [129250] = "PRIEST", -- Power Word: Solace
-  [204197] = "PRIEST", -- Purge of the Wicked
-  [314867] = "PRIEST", -- Shadow Covenant
-  -- Druid
-  [102351] = "DRUID", -- Cenarion Ward
-  [33763] = "DRUID", -- Nourish
-  [81262] = "DRUID", -- Efflorescence
-  [391888] = "DRUID", -- Adaptive Swarm -- Shared with Feral
-  [392160] = "DRUID", -- Invigorate
-  -- Shaman
-  [61295] = "SHAMAN", -- Riptide
-  [77472] = "SHAMAN", -- Healing Wave
-  [73920] = "SHAMAN", -- Healing Rain
-  [73685] = "SHAMAN", -- Unleash Life
-  [207778] = "SHAMAN", -- Downpour
-  -- Paladin
-  [275773] = "PALADIN", -- Judgment
-  [20473] = "PALADIN", -- Holy Shock
-  [82326] = "PALADIN", -- Holy Light
-  [85222] = "PALADIN", -- Light of Dawn
-  [223306] = "PALADIN", -- Bestow Faith
-  [214202] = "PALADIN", -- Rule of Law
-  [210294] = "PALADIN", -- Divine Favor
-  [114165] = "PALADIN", -- Holy Prism
-  [148039] = "PALADIN", -- Barrier of Faith
-  -- Monk
-  [124682] = "MONK", -- Enveloping Mist
-  [191837] = "MONK", -- Essence Font
-  [115151] = "MONK", -- Renewing Mist
-  [116680] = "MONK", -- Thunder Focus Tea
-  [124081] = "MONK", -- Zen Pulse
-  [209584] = "MONK", -- Zen Focus Tea
-  [205234] = "MONK", -- Healing Sphere
-  -- Evoker - Preservation
-  [364343] = "EVOKER", -- Echo
-  [382614] = "EVOKER", -- Dream Breath
-  [366155] = "EVOKER", -- Reversion
-  [382731] = "EVOKER", -- Spiritbloom
-  [373861] = "EVOKER", -- Temporal Anomaly
-}
 
 local activeNPCs = {}
 
-local function GetUnitFrame(nameplate)
-  return nameplate.UnitFrame
-end
-
-local function GetHealthBarFrame(nameplate)
-  local UnitFrame = GetUnitFrame(nameplate)
-  return UnitFrame.HealthBarsContainer
+local function GetAnchorFrame(nameplate)
+  if Plater and nameplate.unitFrame.PlaterOnScreen then
+    return nameplate.unitFrame.HealthBarsContainer
+  elseif nameplate.kui and nameplate.kui.bg and nameplate.kui:IsShown() then
+    return KuiNameplatesPlayerAnchor
+  elseif ElvUIPlayerNamePlateAnchor then
+    return ElvUIPlayerNamePlateAnchor
+  else
+    return nameplate.UnitFrame.HealthBarsContainer
+  end
 end
 
 local function GetTextureCoord(region, texWidth, aspectRatio, xOffset, yOffset)
@@ -694,7 +632,7 @@ local function addQuestIndicator(nameplate, guid)
   local point = NS.db.quest.position == "TOP" and "BOTTOM" or horizontalPoint
   local horizontalRelativePoint = NS.db.quest.position == "LEFT" and "LEFT" or "RIGHT"
   local relativePoint = NS.db.quest.position == "TOP" and "TOP" or horizontalRelativePoint
-  local relativeTo = NS.db.quest.attachToHealthBar and GetHealthBarFrame(nameplate) or nameplate
+  local relativeTo = NS.db.quest.attachToHealthBar and GetAnchorFrame(nameplate) or nameplate
   nameplate.nphQuestIndicator:ClearAllPoints()
   -- point, relativeTo, relativePoint, x, y
   nameplate.nphQuestIndicator:SetPoint(point, relativeTo, relativePoint, offset.x, offset.y)
@@ -775,7 +713,7 @@ local function addNPCIndicator(nameplate, guid)
   local point = NS.db.npc.position == "TOP" and "BOTTOM" or horizontalPoint
   local horizontalRelativePoint = NS.db.npc.position == "LEFT" and "LEFT" or "RIGHT"
   local relativePoint = NS.db.npc.position == "TOP" and "TOP" or horizontalRelativePoint
-  local relativeTo = NS.db.npc.attachToHealthBar and GetHealthBarFrame(nameplate) or nameplate
+  local relativeTo = NS.db.npc.attachToHealthBar and GetAnchorFrame(nameplate) or nameplate
   nameplate.nphNPCIndicator:SetSize(newIconSize, newIconSize)
   nameplate.nphNPCIndicator:ClearAllPoints()
   -- point, relativeTo, relativePoint, x, y
@@ -978,7 +916,7 @@ local function addHealerIndicator(nameplate, guid)
   }
   local point = NS.db.healer.position == "LEFT" and "RIGHT" or "LEFT"
   local relativePoint = NS.db.healer.position == "LEFT" and "LEFT" or "RIGHT"
-  local relativeTo = NS.db.healer.attachToHealthBar and GetHealthBarFrame(nameplate) or nameplate
+  local relativeTo = NS.db.healer.attachToHealthBar and GetAnchorFrame(nameplate) or nameplate
   nameplate.nphHealerIndicator:ClearAllPoints()
   -- point, relativeTo, relativePoint, x, y
   nameplate.nphHealerIndicator:SetPoint(point, relativeTo, relativePoint, offset.x, offset.y)
@@ -1094,7 +1032,7 @@ local function addClassIndicator(nameplate, guid)
   local point = NS.db.class.position == "TOP" and "BOTTOM" or horizontalPoint
   local horizontalRelativePoint = NS.db.class.position == "LEFT" and "LEFT" or "RIGHT"
   local relativePoint = NS.db.class.position == "TOP" and "TOP" or horizontalRelativePoint
-  local relativeTo = NS.db.class.attachToHealthBar and GetHealthBarFrame(nameplate) or nameplate
+  local relativeTo = NS.db.class.attachToHealthBar and GetAnchorFrame(nameplate) or nameplate
   nameplate.nphClassIndicator:ClearAllPoints()
   -- point, relativeTo, relativePoint, x, y
   nameplate.nphClassIndicator:SetPoint(point, relativeTo, relativePoint, offset.x, offset.y)
@@ -1180,7 +1118,7 @@ local function addArrowIndicator(nameplate, guid)
   local point = NS.db.arrow.position == "TOP" and "BOTTOM" or horizontalPoint
   local horizontalRelativePoint = NS.db.arrow.position == "LEFT" and "LEFT" or "RIGHT"
   local relativePoint = NS.db.arrow.position == "TOP" and "TOP" or horizontalRelativePoint
-  local relativeTo = NS.db.arrow.attachToHealthBar and GetHealthBarFrame(nameplate) or nameplate
+  local relativeTo = NS.db.arrow.attachToHealthBar and GetAnchorFrame(nameplate) or nameplate
   nameplate.nphArrowIndicator:ClearAllPoints()
   -- point, relativeTo, relativePoint, x, y
   nameplate.nphArrowIndicator:SetPoint(point, relativeTo, relativePoint, offset.x, offset.y)
@@ -1211,7 +1149,7 @@ end
 
 function NameplateIcons:attachToNameplate(nameplate, guid)
   if not nameplate.rbgdAnchorFrame then
-    local attachmentFrame = GetHealthBarFrame(nameplate)
+    local attachmentFrame = GetAnchorFrame(nameplate)
     nameplate.rbgdAnchorFrame = CreateFrame("Frame", nil, attachmentFrame)
     nameplate.rbgdAnchorFrame:SetFrameStrata("HIGH")
     nameplate.rbgdAnchorFrame:SetFrameLevel(attachmentFrame:GetFrameLevel() + 1)
@@ -1660,51 +1598,6 @@ end)
 --   end
 -- end)
 
---[[
-1. timestamp: number
-2. subevent: string
-3. hideCaster: boolean
-4. sourceGUID: string
-5. sourceName: string
-6. sourceFlags: number
-7. sourceRaidFlags: number
-8. destGUID: string
-9. destName: string
-10. destFlags: number
-11. destRaidFlags: number
--- extra for certain subevent types
---]]
-function NameplateIcons:COMBAT_LOG_EVENT_UNFILTERED()
-  local _, subevent, _, sourceGUID, _, _, _, destGUID, _, destFlags = CombatLogGetCurrentEventInfo()
-  if not (sourceGUID or destGUID) then
-    return
-  end
-  local isMindControlled = false
-  local isNotPetOrPlayer = false
-  local isPlayer = bband(destFlags, COMBATLOG_OBJECT_TYPE_PLAYER) > 0
-  if not isPlayer then
-    if sfind(destGUID, "Player-") then
-      -- Players have same bitmask as player pets when they're mindcontrolled and MC aura breaks, so we need to distinguish these
-      -- so we can ignore the player pets but not actual players
-      isMindControlled = true
-    end
-    if not isMindControlled then
-      return
-    end
-    if bband(destFlags, COMBATLOG_OBJECT_CONTROL_PLAYER) <= 0 then -- is not player pet or is not MCed
-      isNotPetOrPlayer = true
-    end
-  end
-  local spellId = select(12, CombatLogGetCurrentEventInfo())
-  if spellId then
-    if HEALER_SPELL_EVENTS[subevent] and HEALER_SPELLS[spellId] then
-      if not Healers[sourceGUID] then
-        Healers[sourceGUID] = true
-      end
-    end
-  end
-end
-
 function NameplateIcons:PLAYER_SPECIALIZATION_CHANGED()
   local guid = UnitGUID("player")
   if guid then
@@ -1811,12 +1704,6 @@ function NameplateIcons:PLAYER_ENTERING_WORLD(isInitialLogin, _)
   NameplateIconsFrame:RegisterEvent("GROUP_ROSTER_UPDATE")
   NameplateIconsFrame:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
   NameplateIconsFrame:RegisterEvent("UNIT_QUEST_LOG_CHANGED")
-
-  if IsInInstance() then
-    NameplateIconsFrame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
-  else
-    NameplateIconsFrame:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
-  end
 end
 
 function NameplateIcons:PLAYER_LOGIN()
