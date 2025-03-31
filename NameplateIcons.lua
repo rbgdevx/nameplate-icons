@@ -77,11 +77,13 @@ local activeNPCs = {}
 
 local function GetAnchorFrame(nameplate)
   if Plater and nameplate.unitFrame.PlaterOnScreen then
-    return nameplate.unitFrame.HealthBarsContainer
+    return nameplate.unitFrame.healthBar
   elseif nameplate.kui and nameplate.kui.bg and nameplate.kui:IsShown() then
     return KuiNameplatesPlayerAnchor
   elseif ElvUIPlayerNamePlateAnchor then
     return ElvUIPlayerNamePlateAnchor
+  elseif TidyPlates and nameplate.extended then
+    return nameplate.extended.visual.healthbar
   else
     return nameplate.UnitFrame.HealthBarsContainer
   end

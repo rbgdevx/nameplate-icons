@@ -1,6 +1,6 @@
-## Interface: 110007
+## Interface: 110100
 ## Title: NameplateIcons
-## Version: 1.0.1
+## Version: 1.0.2
 ## Author: RBGDEV
 ## Notes: Shows icons on nameplates
 ## SavedVariables: NameplateIconsDB
