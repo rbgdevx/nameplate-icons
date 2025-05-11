@@ -1438,11 +1438,46 @@ local AceConfig = {
       type = "group",
       order = 2,
       args = {
+        hideServerName = {
+          name = "Hide server name on player nameplates",
+          type = "toggle",
+          order = 1,
+          width = 1.7,
+          get = function(_)
+            return NS.db.general.hideServerName
+          end,
+          set = function(_, val)
+            NS.db.general.hideServerName = val
+            NS.OnDbChanged()
+          end,
+        },
+        showRealmIndicator = {
+          name = "Show different realm indicator, (*)",
+          type = "toggle",
+          order = 2,
+          width = 1.5,
+          disabled = function(_)
+            return not NS.db.general.hideServerName
+          end,
+          get = function(_)
+            return NS.db.general.showRealmIndicator
+          end,
+          set = function(_, val)
+            NS.db.general.showRealmIndicator = val
+            NS.OnDbChanged()
+          end,
+        },
+        spacer1 = {
+          name = "",
+          type = "description",
+          order = 3,
+          width = "full",
+        },
         ignoreNameplateAlpha = {
           name = "Ignore nameplate alpha",
           type = "toggle",
-          order = 1,
-          width = "full",
+          order = 4,
+          width = 1.1,
           get = function(_)
             return NS.db.general.ignoreNameplateAlpha
           end,
@@ -1454,8 +1489,8 @@ local AceConfig = {
         ignoreNameplateScale = {
           name = "Ignore nameplate scale",
           type = "toggle",
-          order = 2,
-          width = "full",
+          order = 5,
+          width = 1.0,
           get = function(_)
             return NS.db.general.ignoreNameplateScale
           end,
@@ -1464,23 +1499,23 @@ local AceConfig = {
             NS.OnDbChanged()
           end,
         },
-        spacer1 = {
+        spacer2 = {
           name = "",
           type = "description",
-          order = 3,
+          order = 6,
           width = "full",
         },
         desc = {
           name = "The following settings may be affected by other addons.",
           fontSize = "small",
           type = "description",
-          order = 4,
+          order = 7,
           width = "full",
         },
         selfClickThrough = {
           name = "Click Through Self Nameplate",
           type = "toggle",
-          order = 5,
+          order = 8,
           width = "full",
           get = function(_)
             return NS.db.general.selfClickThrough
@@ -1493,7 +1528,7 @@ local AceConfig = {
         friendlyClickThrough = {
           name = "Click Through Friendly Nameplates",
           type = "toggle",
-          order = 6,
+          order = 9,
           width = "full",
           get = function(_)
             return NS.db.general.friendlyClickThrough
@@ -1506,7 +1541,7 @@ local AceConfig = {
         enemyClickThrough = {
           name = "Click Through Enemy Nameplates",
           type = "toggle",
-          order = 7,
+          order = 10,
           width = "full",
           get = function(_)
             return NS.db.general.enemyClickThrough

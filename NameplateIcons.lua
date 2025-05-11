@@ -91,6 +91,7 @@ end
 
 local function GetTextureCoord(region, texWidth, aspectRatio, xOffset, yOffset)
   region.currentCoord = region.currentCoord or {}
+
   local usesMasque = false
   if not usesMasque then
     region.currentCoord[1], region.currentCoord[2], region.currentCoord[3], region.currentCoord[4], region.currentCoord[5], region.currentCoord[6], region.currentCoord[7], region.currentCoord[8] =
@@ -164,6 +165,7 @@ local function hideBuffFrames(nameplate, guid)
 
   local unit = nameplate.namePlateUnitToken
 
+  local isMe = UnitIsUnit(unit, "player")
   local isPlayer = UnitIsPlayer(unit)
   local isNPC = not isPlayer
   local isFriend = UnitIsFriend("player", unit)
@@ -172,7 +174,7 @@ local function hideBuffFrames(nameplate, guid)
   local isBattleground = NameplateIconsFrame.inBattleground
   local isOutdoors = NameplateIconsFrame.isOutdoors
 
-  local hideFriendly = NS.db.nameplate.buffFrames.hideFriendly and (isFriend and isPlayer)
+  local hideFriendly = NS.db.nameplate.buffFrames.hideFriendly and (isFriend and isPlayer and not isMe)
   local hideEnemy = NS.db.nameplate.buffFrames.hideEnemy and (isEnemy and isPlayer)
   local hideNPC = NS.db.nameplate.buffFrames.hideNPC and isNPC
   local hideBuffFrame = hideFriendly or hideEnemy or hideNPC
@@ -207,6 +209,7 @@ local function hideCastBars(nameplate, guid)
 
   local unit = nameplate.namePlateUnitToken
 
+  local isMe = UnitIsUnit(unit, "player")
   local isPlayer = UnitIsPlayer(unit)
   local isNPC = not isPlayer
   local isFriend = UnitIsFriend("player", unit)
@@ -215,7 +218,7 @@ local function hideCastBars(nameplate, guid)
   local isBattleground = NameplateIconsFrame.inBattleground
   local isOutdoors = NameplateIconsFrame.isOutdoors
 
-  local hideFriendly = NS.db.nameplate.castBars.hideFriendly and (isFriend and isPlayer)
+  local hideFriendly = NS.db.nameplate.castBars.hideFriendly and (isFriend and isPlayer and not isMe)
   local hideEnemy = NS.db.nameplate.castBars.hideEnemy and (isEnemy and isPlayer)
   local hideNPC = NS.db.nameplate.castBars.hideNPC and isNPC
   local hideCastBar = hideFriendly or hideEnemy or hideNPC
@@ -243,6 +246,54 @@ local function hideCastBars(nameplate, guid)
   end
 end
 
+local function hideServers(nameplate, guid)
+  if not nameplate.UnitFrame.name then
+    return
+  end
+
+  local unit = nameplate.namePlateUnitToken
+
+  local isPlayer = UnitIsPlayer(unit)
+  local isArena = NameplateIconsFrame.inArena
+  local isBattleground = NameplateIconsFrame.inBattleground
+  local isOutdoors = NameplateIconsFrame.isOutdoors
+
+  local hideServerName = NS.db.general.hideServerName and isPlayer
+  local hideOutsideArena = not NS.db.nameplate.showArena and isArena
+  local hideOutsideBattleground = not NS.db.nameplate.showBattleground and isBattleground
+  local hideOutside = not NS.db.nameplate.showOutdoors and isOutdoors
+  local hideLocation = true
+  if isArena then
+    hideLocation = hideOutsideArena
+  elseif isBattleground then
+    hideLocation = hideOutsideBattleground
+  elseif isOutdoors then
+    hideLocation = hideOutside
+  end
+
+  local nameWithServer = GetUnitName(unit, true)
+
+  if not nameWithServer then
+    return
+  end
+
+  -- Don't Show Different Realm Indicator (*)
+  local nameWithoutIndicator = nameWithServer:match("[^-]+")
+  -- Show Different Realm Indicator (*)
+  local nameWithIndicator = GetUnitName(unit, false)
+
+  if hideLocation then
+    nameplate.UnitFrame.name:SetText(nameWithServer)
+    return
+  end
+
+  if hideServerName then
+    nameplate.UnitFrame.name:SetText(NS.db.general.showRealmIndicator and nameWithIndicator or nameWithoutIndicator)
+  else
+    nameplate.UnitFrame.name:SetText(nameWithServer)
+  end
+end
+
 local function hideNames(nameplate, guid)
   if not nameplate.UnitFrame.name then
     return
@@ -258,7 +309,8 @@ local function hideNames(nameplate, guid)
   local isBattleground = NameplateIconsFrame.inBattleground
   local isOutdoors = NameplateIconsFrame.isOutdoors
 
-  local hideFriendly = NS.db.nameplate.names.hideFriendly and (isFriend and isPlayer)
+  local isMe = UnitIsUnit(unit, "player")
+  local hideFriendly = NS.db.nameplate.names.hideFriendly and (isFriend and isPlayer and not isMe)
   local hideEnemy = NS.db.nameplate.names.hideEnemy and (isEnemy and isPlayer)
   local hideNPC = NS.db.nameplate.names.hideNPC and isNPC
   local hideName = hideFriendly or hideEnemy or hideNPC
@@ -293,6 +345,7 @@ local function hideHealthBars(nameplate, guid)
 
   local unit = nameplate.namePlateUnitToken
 
+  local isMe = UnitIsUnit(unit, "player")
   local isPlayer = UnitIsPlayer(unit)
   local isNPC = not isPlayer
   local isFriend = UnitIsFriend("player", unit)
@@ -301,7 +354,7 @@ local function hideHealthBars(nameplate, guid)
   local isBattleground = NameplateIconsFrame.inBattleground
   local isOutdoors = NameplateIconsFrame.isOutdoors
 
-  local hideFriendly = NS.db.nameplate.healthBars.hideFriendly and (isFriend and isPlayer)
+  local hideFriendly = NS.db.nameplate.healthBars.hideFriendly and (isFriend and isPlayer and not isMe)
   local hideEnemy = NS.db.nameplate.healthBars.hideEnemy and (isEnemy and isPlayer)
   local hideNPC = NS.db.nameplate.healthBars.hideNPC and isNPC
   local hideHealthBar = hideFriendly or hideEnemy or hideNPC
@@ -1160,6 +1213,7 @@ function NameplateIcons:attachToNameplate(nameplate, guid)
   checkIsHealer(nameplate, guid)
   hideHealthBars(nameplate, guid)
   hideNames(nameplate, guid)
+  hideServers(nameplate, guid)
   hideCastBars(nameplate, guid)
   hideBuffFrames(nameplate, guid)
 
@@ -1550,6 +1604,7 @@ hooksecurefunc(NamePlateDriverFrame, "OnUnitFactionChanged", function(_, unit)
     if nameplate and guid then
       hideHealthBars(nameplate, guid)
       hideNames(nameplate, guid)
+      hideServers(nameplate, guid)
       hideCastBars(nameplate, guid)
       hideBuffFrames(nameplate, guid)
     end

@@ -46,6 +46,8 @@ NS.NameplateIcons.frame = NameplateIconsFrame
 ---@field hideNPC boolean
 
 ---@class GeneralConfig : table
+---@field hideServerName boolean
+---@field showRealmIndicator boolean
 ---@field ignoreNameplateAlpha boolean
 ---@field ignoreNameplateScale boolean
 ---@field selfClickThrough boolean
@@ -435,6 +437,8 @@ end
 --- @type Database
 DefaultDatabase = {
   general = {
+    hideServerName = false,
+    showRealmIndicator = false,
     ignoreNameplateAlpha = false,
     ignoreNameplateScale = false,
     selfClickThrough = false,
