@@ -129,6 +129,16 @@ NS.NameplateIcons.frame = NameplateIconsFrame
 ---@field offsetX number
 ---@field offsetY number
 
+---@class MarkerConfig : table
+---@field test boolean
+---@field override boolean
+---@field enabled boolean
+---@field scale number
+---@field position "LEFT"|"TOP"|"RIGHT"
+---@field attachToHealthBar boolean
+---@field offsetX number
+---@field offsetY number
+
 ---@class Database : table
 ---@field general GeneralConfig
 ---@field nameplate NameplateConfig
@@ -137,6 +147,7 @@ NS.NameplateIcons.frame = NameplateIconsFrame
 ---@field healer HealerConfig
 ---@field npc NPCConfig
 ---@field quest QuestConfig
+---@field marker MarkerConfig
 ---@field npcs table<string, MyNPCInfo>
 
 ---@class NPC_DATA : table<string, NpcInfo>
@@ -536,6 +547,26 @@ DefaultDatabase = {
     offsetX = 0,
     offsetY = 0,
   },
+  marker = {
+    test = false,
+    override = true,
+    enabled = false,
+    scale = 1.5,
+    position = "TOP", -- left/top/right
+    attachToHealthBar = false,
+    offsetX = 0,
+    offsetY = 0,
+  },
+  -- objective = {
+  -- 	test = false,
+  -- 	override = true,
+  -- 	enabled = false,
+  -- 	scale = 2.0,
+  -- 	position = "TOP", -- left/top/right
+  -- 	attachToHealthBar = false,
+  -- 	offsetX = 0,
+  -- 	offsetY = 0,
+  -- },
   npcs = {},
 }
 

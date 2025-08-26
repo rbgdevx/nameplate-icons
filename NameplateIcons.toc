@@ -1,20 +1,10 @@
-## Interface: 110105
-## Title: NameplateIcons
-## Version: 1.0.3
+## Interface: 110200
+## Title: Nameplate Icons
+## Version: 1.1.0
 ## Author: RBGDEV
 ## Notes: Shows icons on nameplates
 ## SavedVariables: NameplateIconsDB
-## Category-enUS: RBGDEV
-## Category-deDE: RBGDEV
-## Category-esES: RBGDEV
-## Category-esMX: RBGDEV
-## Category-frFR: RBGDEV
-## Category-itIT: RBGDEV
-## Category-koKR: RBGDEV
-## Category-ptBR: RBGDEV
-## Category-ruRU: RBGDEV
-## Category-zhCN: RBGDEV
-## Category-zhTW: RBGDEV
+## Category: RBGDEV
 ## X-Category: Interface Enhancements
 ## X-License: All Rights Reserved
 ## X-Website: https://www.curseforge.com/wow/addons/nameplate-icons

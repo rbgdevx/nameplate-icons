@@ -1,5 +1,13 @@
 # Nameplate Icons
 
+## [v1.1.0](https://github.com/rbgdevx/nameplate-icons/releases/tag/v1.1.0) (2025-08-26)
+
+- Adding new "Marker" icon option to control raid markers
+- Fixing variable reference to use the correct addon namespace
+- Fixing nameplate anchors for third party nameplate addons
+- Fixing frame names to reflect correct namespace
+- Update toc
+
 ## [v1.0.3](https://github.com/rbgdevx/nameplate-icons/releases/tag/v1.0.3) (2025-05-11)
 
 - Adding the ability to hide the server name from nameplates

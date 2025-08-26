@@ -50,9 +50,14 @@ local function ParseTextureString(input)
     return "class", false
   end
 
+  local _texture, isTexture = input:match("([^x]+)x([^x]+)")
+  if isTexture and isTexture == "tecture" then
+    return _texture, "texture"
+  end
+
   local _texture, isAtlas = input:match("([^x]+)x([^x]+)")
   if isAtlas and isAtlas == "atlas" then
-    return _texture, isAtlas
+    return _texture, "atlas"
   end
 
   -- Split the string into texture and RGBA parts
@@ -284,10 +289,11 @@ local methods = {
       local texture, r, g, b, a, showGlow = ParseTextureString(path)
 
       self.isAtlas = r == "atlas"
+      self.isTexture = r == "texture"
 
       CreateMask(self)
 
-      if r ~= "atlas" then
+      if r ~= "atlas" and r ~= "texture" then
         image:SetDesaturated(false)
 
         local degrees = 0
@@ -365,6 +371,7 @@ local methods = {
         if self.mask then
           image:RemoveMaskTexture(self.mask)
         end
+
         if self.border then
           self.border:ClearAllPoints()
           self.border:SetVertexColor(1, 1, 1, 0)

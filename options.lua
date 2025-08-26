@@ -3,6 +3,7 @@ local AddonName, NS = ...
 local pairs = pairs
 local next = next
 local tostring = tostring
+local UnitFactionGroup = UnitFactionGroup
 
 local tinsert = table.insert
 local tsort = table.sort
@@ -1103,15 +1104,446 @@ local AceConfig = {
               image = function(info)
                 return "Crosshair_Quest_48xatlas"
               end,
-              imageHeight = 42,
-              imageWidth = 42,
+              imageHeight = 48,
+              imageWidth = 48,
             },
           },
         },
+        marker = {
+          name = "Marker",
+          type = "group",
+          order = 5,
+          args = {
+            enable = {
+              name = "Enable",
+              type = "toggle",
+              order = 1,
+              width = 0.4,
+              get = function(_)
+                return NS.db.marker.enabled
+              end,
+              set = function(_, val)
+                NS.db.marker.enabled = val
+                NS.OnDbChanged()
+              end,
+            },
+            spacer1 = {
+              name = "",
+              type = "description",
+              order = 2,
+              width = 0.1,
+            },
+            test = {
+              name = "Test Mode: Add a marker to anyones nameplate to test",
+              desc = "",
+              type = "description",
+              order = 3,
+              width = 2.1,
+              fontSize = "medium",
+              disabled = function(_)
+                return not NS.db.marker.enabled
+              end,
+              get = function(_)
+                return NS.db.marker.test
+              end,
+              set = function(_, val)
+                NS.db.marker.test = val
+                NS.OnDbChanged()
+              end,
+            },
+            spacer2 = {
+              name = "",
+              type = "description",
+              order = 4,
+              width = "full",
+            },
+            override = {
+              name = "Override & Replace other icons",
+              desc = "Override and replace any existing icons for units with markers assigned",
+              type = "toggle",
+              order = 5,
+              width = "full",
+              disabled = function(_)
+                return not NS.db.marker.enabled
+              end,
+              get = function(_)
+                return NS.db.marker.override
+              end,
+              set = function(_, val)
+                NS.db.marker.override = val
+                NS.OnDbChanged()
+              end,
+            },
+            spacer3 = {
+              name = "",
+              type = "description",
+              order = 6,
+              width = "full",
+            },
+            position = {
+              name = "Position",
+              type = "select",
+              order = 7,
+              width = 1.0,
+              values = {
+                ["LEFT"] = "Left",
+                ["TOP"] = "Top",
+                ["RIGHT"] = "Right",
+              },
+              sorting = {
+                "LEFT",
+                "TOP",
+                "RIGHT",
+              },
+              disabled = function(_)
+                return not NS.db.marker.enabled
+              end,
+              get = function(_)
+                return NS.db.marker.position
+              end,
+              set = function(_, val)
+                NS.db.marker.position = val
+                NS.OnDbChanged()
+              end,
+            },
+            spacer4 = {
+              name = "",
+              type = "description",
+              order = 8,
+              width = 0.1,
+            },
+            attachToHealthBar = {
+              name = "Attach directly to the healthbar",
+              type = "toggle",
+              order = 9,
+              width = 1.5,
+              disabled = function(_)
+                return not NS.db.marker.enabled
+              end,
+              get = function(_)
+                return NS.db.marker.attachToHealthBar
+              end,
+              set = function(_, val)
+                NS.db.marker.attachToHealthBar = val
+                NS.OnDbChanged()
+              end,
+            },
+            spacer5 = {
+              name = "",
+              type = "description",
+              order = 108,
+              width = "full",
+            },
+            offsetX = {
+              name = "Offset X",
+              type = "range",
+              order = 11,
+              width = 1.2,
+              isPercent = false,
+              min = -100,
+              max = 100,
+              step = 1,
+              disabled = function(_)
+                return not NS.db.marker.enabled
+              end,
+              get = function(_)
+                return NS.db.marker.offsetX
+              end,
+              set = function(_, val)
+                NS.db.marker.offsetX = val
+                NS.OnDbChanged()
+              end,
+            },
+            offsetY = {
+              name = "Offset Y",
+              type = "range",
+              order = 12,
+              width = 1.2,
+              isPercent = false,
+              min = -100,
+              max = 100,
+              step = 1,
+              disabled = function(_)
+                return not NS.db.marker.enabled
+              end,
+              get = function(_)
+                return NS.db.marker.offsetY
+              end,
+              set = function(_, val)
+                NS.db.marker.offsetY = val
+                NS.OnDbChanged()
+              end,
+            },
+            spacer6 = {
+              name = "",
+              type = "description",
+              order = 13,
+              width = "full",
+            },
+            scale = {
+              name = "Scale",
+              type = "range",
+              order = 14,
+              width = 1.75,
+              isPercent = false,
+              min = 0.5,
+              max = 2,
+              step = 0.01,
+              disabled = function(_)
+                return not NS.db.marker.enabled
+              end,
+              get = function(_)
+                return NS.db.marker.scale
+              end,
+              set = function(_, val)
+                NS.db.marker.scale = val
+                NS.OnDbChanged()
+              end,
+            },
+            spacer7 = {
+              name = " ",
+              type = "description",
+              order = 15,
+              width = "full",
+            },
+            iconDesc = {
+              name = "Icon:",
+              type = "description",
+              order = 16,
+              width = "full",
+            },
+            iconImage = {
+              name = " ",
+              type = "description",
+              order = 17,
+              image = function(info)
+                return "Interface\\TargetingFrame\\UI-RaidTargetingIcon_6xtecture"
+              end,
+              imageHeight = 52,
+              imageWidth = 52,
+            },
+          },
+        },
+        -- objective = {
+        -- 	name = "Objective",
+        -- 	type = "group",
+        -- 	order = 6,
+        -- 	args = {
+        -- 		enable = {
+        -- 			name = "Enable",
+        -- 			type = "toggle",
+        -- 			order = 1,
+        -- 			width = 0.4,
+        -- 			get = function(_)
+        -- 				return NS.db.objective.enabled
+        -- 			end,
+        -- 			set = function(_, val)
+        -- 				NS.db.objective.enabled = val
+        -- 				NS.OnDbChanged()
+        -- 			end,
+        -- 		},
+        -- 		spacer1 = {
+        -- 			name = "",
+        -- 			type = "description",
+        -- 			order = 2,
+        -- 			width = 0.1,
+        -- 		},
+        -- 		test = {
+        -- 			name = "Test Mode: Go to any elite, rare mob, or tanking dummy to test",
+        -- 			desc = "",
+        -- 			type = "description",
+        -- 			order = 3,
+        -- 			width = 2.4,
+        -- 			fontSize = "medium",
+        -- 			disabled = function(_)
+        -- 				return not NS.db.objective.enabled
+        -- 			end,
+        -- 			get = function(_)
+        -- 				return NS.db.objective.test
+        -- 			end,
+        -- 			set = function(_, val)
+        -- 				NS.db.objective.test = val
+        -- 				NS.OnDbChanged()
+        -- 			end,
+        -- 		},
+        -- 		spacer2 = {
+        -- 			name = "",
+        -- 			type = "description",
+        -- 			order = 4,
+        -- 			width = "full",
+        -- 		},
+        -- 		override = {
+        -- 			name = "Override & Replace other icons, even markers",
+        -- 			desc = "Override and replace any and all existing icons for units with flags, orbs, or crystals assigned",
+        -- 			type = "toggle",
+        -- 			order = 5,
+        -- 			width = "full",
+        -- 			disabled = function(_)
+        -- 				return not NS.db.objective.enabled
+        -- 			end,
+        -- 			get = function(_)
+        -- 				return NS.db.objective.override
+        -- 			end,
+        -- 			set = function(_, val)
+        -- 				NS.db.objective.override = val
+        -- 				NS.OnDbChanged()
+        -- 			end,
+        -- 		},
+        -- 		spacer3 = {
+        -- 			name = "",
+        -- 			type = "description",
+        -- 			order = 6,
+        -- 			width = "full",
+        -- 		},
+        -- 		position = {
+        -- 			name = "Position",
+        -- 			type = "select",
+        -- 			order = 7,
+        -- 			width = 1.0,
+        -- 			values = {
+        -- 				["LEFT"] = "Left",
+        -- 				["TOP"] = "Top",
+        -- 				["RIGHT"] = "Right",
+        -- 			},
+        -- 			sorting = {
+        -- 				"LEFT",
+        -- 				"TOP",
+        -- 				"RIGHT",
+        -- 			},
+        -- 			disabled = function(_)
+        -- 				return not NS.db.objective.enabled
+        -- 			end,
+        -- 			get = function(_)
+        -- 				return NS.db.objective.position
+        -- 			end,
+        -- 			set = function(_, val)
+        -- 				NS.db.objective.position = val
+        -- 				NS.OnDbChanged()
+        -- 			end,
+        -- 		},
+        -- 		spacer4 = {
+        -- 			name = "",
+        -- 			type = "description",
+        -- 			order = 8,
+        -- 			width = 0.1,
+        -- 		},
+        -- 		attachToHealthBar = {
+        -- 			name = "Attach directly to the healthbar",
+        -- 			type = "toggle",
+        -- 			order = 9,
+        -- 			width = 1.5,
+        -- 			disabled = function(_)
+        -- 				return not NS.db.objective.enabled
+        -- 			end,
+        -- 			get = function(_)
+        -- 				return NS.db.objective.attachToHealthBar
+        -- 			end,
+        -- 			set = function(_, val)
+        -- 				NS.db.objective.attachToHealthBar = val
+        -- 				NS.OnDbChanged()
+        -- 			end,
+        -- 		},
+        -- 		spacer5 = {
+        -- 			name = "",
+        -- 			type = "description",
+        -- 			order = 108,
+        -- 			width = "full",
+        -- 		},
+        -- 		offsetX = {
+        -- 			name = "Offset X",
+        -- 			type = "range",
+        -- 			order = 11,
+        -- 			width = 1.2,
+        -- 			isPercent = false,
+        -- 			min = -100,
+        -- 			max = 100,
+        -- 			step = 1,
+        -- 			disabled = function(_)
+        -- 				return not NS.db.objective.enabled
+        -- 			end,
+        -- 			get = function(_)
+        -- 				return NS.db.objective.offsetX
+        -- 			end,
+        -- 			set = function(_, val)
+        -- 				NS.db.objective.offsetX = val
+        -- 				NS.OnDbChanged()
+        -- 			end,
+        -- 		},
+        -- 		offsetY = {
+        -- 			name = "Offset Y",
+        -- 			type = "range",
+        -- 			order = 12,
+        -- 			width = 1.2,
+        -- 			isPercent = false,
+        -- 			min = -100,
+        -- 			max = 100,
+        -- 			step = 1,
+        -- 			disabled = function(_)
+        -- 				return not NS.db.objective.enabled
+        -- 			end,
+        -- 			get = function(_)
+        -- 				return NS.db.objective.offsetY
+        -- 			end,
+        -- 			set = function(_, val)
+        -- 				NS.db.objective.offsetY = val
+        -- 				NS.OnDbChanged()
+        -- 			end,
+        -- 		},
+        -- 		spacer6 = {
+        -- 			name = "",
+        -- 			type = "description",
+        -- 			order = 13,
+        -- 			width = "full",
+        -- 		},
+        -- 		scale = {
+        -- 			name = "Scale",
+        -- 			type = "range",
+        -- 			order = 14,
+        -- 			width = 1.75,
+        -- 			isPercent = false,
+        -- 			min = 0.5,
+        -- 			max = 3,
+        -- 			step = 0.01,
+        -- 			disabled = function(_)
+        -- 				return not NS.db.objective.enabled
+        -- 			end,
+        -- 			get = function(_)
+        -- 				return NS.db.objective.scale
+        -- 			end,
+        -- 			set = function(_, val)
+        -- 				NS.db.objective.scale = val
+        -- 				NS.OnDbChanged()
+        -- 			end,
+        -- 		},
+        -- 		spacer7 = {
+        -- 			name = " ",
+        -- 			type = "description",
+        -- 			order = 15,
+        -- 			width = "full",
+        -- 		},
+        -- 		iconDesc = {
+        -- 			name = "Icon:",
+        -- 			type = "description",
+        -- 			order = 16,
+        -- 			width = "full",
+        -- 		},
+        -- 		iconImage = {
+        -- 			name = " ",
+        -- 			type = "description",
+        -- 			order = 17,
+        -- 			image = function(info)
+        -- 				return UnitFactionGroup("player") == "Alliance" and "ctf_flags-rightIcon1-state1xatlas"
+        -- 					or "ctf_flags-leftIcon1-state1xatlas"
+        -- 			end,
+        -- 			imageHeight = 48,
+        -- 			imageWidth = 48,
+        -- 		},
+        -- 	},
+        -- },
         npc = {
           name = "Totems/Pets",
           type = "group",
-          order = 5,
+          order = 7,
           args = {
             enable = {
               name = "Enable",
