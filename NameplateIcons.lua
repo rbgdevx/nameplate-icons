@@ -77,21 +77,44 @@ local HEALER_SPECS = {
 local activeNPCs = {}
 
 local function GetAnchorFrame(nameplate)
-  if nameplate.UnitFrame then
-    if nameplate.UnitFrame.HealthBarsContainer then
+  if nameplate.unitFrame then
+    if nameplate.unitFrame then
+      -- works as Plater internal nameplate.unitFramePlater
+      return nameplate.unitFrame.healthBar
+    end
+  elseif nameplate.UnitFrame then
+    if IsAddOnLoaded("TidyPlates_ThreatPlates") then
+      local tFrame = nameplate.TPFrame
+      if tFrame then
+        return tFrame
+      end
+    elseif IsAddOnLoaded("Kui_Nameplates") then
+      local kFrame = nameplate.kui
+      if kFrame then
+        return kFrame
+      end
+    elseif IsAddOnLoaded("TidyPlates") then
+      local tFrame = nameplate.extended
+      if tFrame then
+        return tFrame
+      end
+    elseif IsAddOnLoaded("NeatPlates") then
+      local nFrame = nameplate.extended
+      if nFrame then
+        return nFrame
+      end
+    elseif nameplate.UnitFrame.HealthBarsContainer then
+      -- does not work as NeatPlates internal nameplate.extended
       return nameplate.UnitFrame.HealthBarsContainer
     elseif nameplate.UnitFrame.healthBar then
+      -- does not work as NeatPlates internal nameplate.extended
       return nameplate.UnitFrame.healthBar
     else
+      -- works as NeatPlates internal nameplate.extended
+      -- does not work as TidyPlates internal nameplate.extended
+      -- does not work as Kui_Nameplates internal nameplate.kui
+      -- does not work as TidyPlates_ThreatPlates internal nameplate.TPFrame
       return nameplate.UnitFrame
-    end
-  elseif nameplate.unitFrame then
-    if nameplate.unitFrame.HealthBarsContainer then
-      return nameplate.unitFrame.HealthBarsContainer
-    elseif nameplate.unitFrame.Health then
-      return nameplate.unitFrame.Health
-    else
-      return nameplate.unitFrame
     end
   else
     return nameplate

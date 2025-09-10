@@ -1,5 +1,9 @@
 # Nameplate Icons
 
+## [v1.1.1](https://github.com/rbgdevx/nameplate-icons/releases/tag/v1.1.1) (2025-09-10)
+
+- Fixing nameplate anchors for third party nameplate addons
+
 ## [v1.1.0](https://github.com/rbgdevx/nameplate-icons/releases/tag/v1.1.0) (2025-08-26)
 
 - Adding new "Marker" icon option to control raid markers
