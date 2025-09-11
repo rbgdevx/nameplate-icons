@@ -1,5 +1,9 @@
 # Nameplate Icons
 
+## [v1.1.2](https://github.com/rbgdevx/nameplate-icons/releases/tag/v1.1.2) (2025-09-10)
+
+- Changing core anchor
+
 ## [v1.1.1](https://github.com/rbgdevx/nameplate-icons/releases/tag/v1.1.1) (2025-09-10)
 
 - Fixing nameplate anchors for third party nameplate addons
