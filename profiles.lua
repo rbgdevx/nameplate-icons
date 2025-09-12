@@ -9,9 +9,9 @@ local next = next
 local rawget = rawget
 local UnitClass = UnitClass
 
-local AceGUI = LibStub("AceGUI-4.0")
-local AceSerializer = LibStub("AceSerializer-4.0")
-local AceConfigRegistry = LibStub("AceConfigRegistry-4.0")
+local AceGUI = LibStub("AceGUI-3.0")
+local AceSerializer = LibStub("AceSerializer-3.0")
+local AceConfigRegistry = LibStub("AceConfigRegistry-3.0")
 
 local ProfilesFrame = {}
 ProfilesFrame.optionTables = ProfilesFrame.optionTables or {}

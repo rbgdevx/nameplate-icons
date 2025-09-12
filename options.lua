@@ -319,6 +319,7 @@ local AceConfig = {
             iconImage = {
               name = " ",
               type = "description",
+              dialogControl = "NPI_Label",
               order = 24,
               image = function(info)
                 return "covenantsanctum-renown-doublearrow-depressedxatlas"
@@ -616,6 +617,7 @@ local AceConfig = {
             iconImage = {
               name = " ",
               type = "description",
+              dialogControl = "NPI_Label",
               order = 24,
               image = function(info)
                 return "class"
@@ -911,6 +913,7 @@ local AceConfig = {
             iconImage = {
               name = " ",
               type = "description",
+              dialogControl = "NPI_Label",
               order = 24,
               image = function(info)
                 return "roleicon-tiny-healerxatlas"
@@ -1100,6 +1103,7 @@ local AceConfig = {
             iconImage = {
               name = " ",
               type = "description",
+              dialogControl = "NPI_Label",
               order = 15,
               image = function(info)
                 return "Crosshair_Quest_48xatlas"
@@ -1315,6 +1319,7 @@ local AceConfig = {
             iconImage = {
               name = " ",
               type = "description",
+              dialogControl = "NPI_Label",
               order = 17,
               image = function(info)
                 return "Interface\\TargetingFrame\\UI-RaidTargetingIcon_6xtecture"
@@ -1530,6 +1535,7 @@ local AceConfig = {
         -- 		iconImage = {
         -- 			name = " ",
         -- 			type = "description",
+        -- 			dialogControl = "NPI_Label",
         -- 			order = 17,
         -- 			image = function(info)
         -- 				return UnitFactionGroup("player") == "Alliance" and "ctf_flags-rightIcon1-state1xatlas"
@@ -2575,6 +2581,7 @@ NS.MakeOption = function(npcId, npcInfo, index)
       icon = {
         order = 8,
         type = "description",
+        dialogControl = "NPI_Label",
         name = " ",
         image = function(info)
           return GenerateIconString(info, npcIcon, npcGlow)

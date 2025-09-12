@@ -45,8 +45,8 @@ local SetNamePlateFriendlyClickThrough = C_NamePlate.SetNamePlateFriendlyClickTh
 local SetNamePlateEnemyClickThrough = C_NamePlate.SetNamePlateEnemyClickThrough
 local SetCVar = C_CVar.SetCVar
 
-local AceConfig = LibStub("AceConfig-4.0")
-local AceConfigDialog = LibStub("AceConfigDialog-4.0")
+local AceConfig = LibStub("AceConfig-3.0")
+local AceConfigDialog = LibStub("AceConfigDialog-3.0")
 
 local NameplateIcons = NS.NameplateIcons
 local NameplateIconsFrame = NS.NameplateIcons.frame

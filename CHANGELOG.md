@@ -1,5 +1,13 @@
 # Nameplate Icons
 
+## [v1.2.0](https://github.com/rbgdevx/nameplate-icons/releases/tag/v1.2.0) (2025-09-12)
+
+- Fixing breaking issue with WeakAuras (or other addons that use AceConfig/AceGUI) loaded after Nameplate Icons
+- Moved custom AceGUI widget to a separate file to preserve Nameplate Icons custom options functionality
+- Leveraged AceConfig setting to use the new widget
+- Reverted all libs to default versions based on new fixes
+- Removed extra lib files to reduce addon size
+
 ## [v1.1.2](https://github.com/rbgdevx/nameplate-icons/releases/tag/v1.1.2) (2025-09-10)
 
 - Changing core anchor
