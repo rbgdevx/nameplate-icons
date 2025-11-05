@@ -1,5 +1,9 @@
 # Nameplate Icons
 
+## [v1.2.1](https://github.com/rbgdevx/nameplate-icons/releases/tag/v1.2.1) (2025-11-05)
+
+- Fixing healer icon showing up on everyone while playing a healer
+
 ## [v1.2.0](https://github.com/rbgdevx/nameplate-icons/releases/tag/v1.2.0) (2025-09-12)
 
 - Fixing breaking issue with WeakAuras (or other addons that use AceConfig/AceGUI) loaded after Nameplate Icons

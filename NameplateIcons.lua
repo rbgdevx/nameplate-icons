@@ -1043,7 +1043,7 @@ local function addHealerIndicator(nameplate, guid)
   local isSelf = UnitIsUnit(unit, "player")
   local isFriend = UnitIsFriend("player", unit)
   local isEnemy = UnitIsEnemy("player", unit)
-  local isHealer = (NS.isHealer("player") or Healers[guid]) and true or false
+  local isHealer = (NS.isHealer(unit) or Healers[guid]) and true or false
   local isDeadOrGhost = UnitIsDeadOrGhost(unit)
   local isArena = NameplateIconsFrame.inArena
   local isBattleground = NameplateIconsFrame.inBattleground
