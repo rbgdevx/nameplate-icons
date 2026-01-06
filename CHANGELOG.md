@@ -1,5 +1,11 @@
 # Nameplate Icons
 
+## [v1.3.0](https://github.com/rbgdevx/nameplate-icons/releases/tag/v1.3.0) (2026-01-06)
+
+- Updating toc
+- Updating settings
+- General cleanup
+
 ## [v1.2.1](https://github.com/rbgdevx/nameplate-icons/releases/tag/v1.2.1) (2025-11-05)
 
 - Fixing healer icon showing up on everyone while playing a healer

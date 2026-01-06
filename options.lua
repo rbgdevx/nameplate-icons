@@ -3,7 +3,7 @@ local AddonName, NS = ...
 local pairs = pairs
 local next = next
 local tostring = tostring
-local UnitFactionGroup = UnitFactionGroup
+-- local UnitFactionGroup = UnitFactionGroup
 
 local tinsert = table.insert
 local tsort = table.sort
@@ -49,12 +49,7 @@ local AceConfig = {
                 NS.OnDbChanged()
               end,
             },
-            spacer1 = {
-              name = "",
-              type = "description",
-              order = 2,
-              width = 0.1,
-            },
+            spacer1 = { name = "", type = "description", order = 2, width = 0.1 },
             test = {
               name = "Test Mode",
               desc = "Turn on to test settings immediately",
@@ -72,12 +67,7 @@ local AceConfig = {
                 NS.OnDbChanged()
               end,
             },
-            spacer2 = {
-              name = "",
-              type = "description",
-              order = 4,
-              width = "full",
-            },
+            spacer2 = { name = "", type = "description", order = 4, width = "full" },
             desc1 = {
               name = "Show for:",
               fontSize = "medium",
@@ -117,12 +107,7 @@ local AceConfig = {
                 NS.OnDbChanged()
               end,
             },
-            spacer3 = {
-              name = "",
-              type = "description",
-              order = 8,
-              width = "full",
-            },
+            spacer3 = { name = "", type = "description", order = 8, width = "full" },
             desc2 = {
               name = "Show in:",
               fontSize = "medium",
@@ -178,12 +163,7 @@ local AceConfig = {
                 NS.OnDbChanged()
               end,
             },
-            spacer4 = {
-              name = "",
-              type = "description",
-              order = 13,
-              width = "full",
-            },
+            spacer4 = { name = "", type = "description", order = 13, width = "full" },
             position = {
               name = "Position",
               type = "select",
@@ -210,12 +190,7 @@ local AceConfig = {
                 NS.OnDbChanged()
               end,
             },
-            spacer5 = {
-              name = "",
-              type = "description",
-              order = 15,
-              width = 0.1,
-            },
+            spacer5 = { name = "", type = "description", order = 15, width = 0.1 },
             attachToHealthBar = {
               name = "Attach directly to the healthbar",
               type = "toggle",
@@ -232,12 +207,7 @@ local AceConfig = {
                 NS.OnDbChanged()
               end,
             },
-            spacer6 = {
-              name = "",
-              type = "description",
-              order = 17,
-              width = "full",
-            },
+            spacer6 = { name = "", type = "description", order = 17, width = "full" },
             offsetX = {
               name = "Offset X",
               type = "range",
@@ -278,12 +248,7 @@ local AceConfig = {
                 NS.OnDbChanged()
               end,
             },
-            spacer7 = {
-              name = "",
-              type = "description",
-              order = 20,
-              width = "full",
-            },
+            spacer7 = { name = "", type = "description", order = 20, width = "full" },
             scale = {
               name = "Scale",
               type = "range",
@@ -304,12 +269,7 @@ local AceConfig = {
                 NS.OnDbChanged()
               end,
             },
-            spacer8 = {
-              name = " ",
-              type = "description",
-              order = 22,
-              width = "full",
-            },
+            spacer8 = { name = " ", type = "description", order = 22, width = "full" },
             iconDesc = {
               name = "Icon:",
               type = "description",
@@ -347,12 +307,7 @@ local AceConfig = {
                 NS.OnDbChanged()
               end,
             },
-            spacer1 = {
-              name = "",
-              type = "description",
-              order = 2,
-              width = 0.1,
-            },
+            spacer1 = { name = "", type = "description", order = 2, width = 0.1 },
             test = {
               name = "Test Mode",
               desc = "Turn on to test settings immediately",
@@ -370,12 +325,7 @@ local AceConfig = {
                 NS.OnDbChanged()
               end,
             },
-            spacer2 = {
-              name = "",
-              type = "description",
-              order = 4,
-              width = "full",
-            },
+            spacer2 = { name = "", type = "description", order = 4, width = "full" },
             desc1 = {
               name = "Show for:",
               fontSize = "medium",
@@ -415,12 +365,7 @@ local AceConfig = {
                 NS.OnDbChanged()
               end,
             },
-            spacer3 = {
-              name = "",
-              type = "description",
-              order = 8,
-              width = "full",
-            },
+            spacer3 = { name = "", type = "description", order = 8, width = "full" },
             desc2 = {
               name = "Show in:",
               fontSize = "medium",
@@ -476,12 +421,7 @@ local AceConfig = {
                 NS.OnDbChanged()
               end,
             },
-            spacer4 = {
-              name = "",
-              type = "description",
-              order = 13,
-              width = "full",
-            },
+            spacer4 = { name = "", type = "description", order = 13, width = "full" },
             position = {
               name = "Position",
               type = "select",
@@ -508,12 +448,7 @@ local AceConfig = {
                 NS.OnDbChanged()
               end,
             },
-            spacer5 = {
-              name = "",
-              type = "description",
-              order = 15,
-              width = 0.1,
-            },
+            spacer5 = { name = "", type = "description", order = 15, width = 0.1 },
             attachToHealthBar = {
               name = "Attach directly to the healthbar",
               type = "toggle",
@@ -530,12 +465,7 @@ local AceConfig = {
                 NS.OnDbChanged()
               end,
             },
-            spacer6 = {
-              name = "",
-              type = "description",
-              order = 17,
-              width = "full",
-            },
+            spacer6 = { name = "", type = "description", order = 17, width = "full" },
             offsetX = {
               name = "Offset X",
               type = "range",
@@ -576,12 +506,7 @@ local AceConfig = {
                 NS.OnDbChanged()
               end,
             },
-            spacer7 = {
-              name = "",
-              type = "description",
-              order = 20,
-              width = "full",
-            },
+            spacer7 = { name = "", type = "description", order = 20, width = "full" },
             scale = {
               name = "Scale",
               type = "range",
@@ -602,12 +527,7 @@ local AceConfig = {
                 NS.OnDbChanged()
               end,
             },
-            spacer8 = {
-              name = " ",
-              type = "description",
-              order = 22,
-              width = "full",
-            },
+            spacer8 = { name = " ", type = "description", order = 22, width = "full" },
             iconDesc = {
               name = "Icon:",
               type = "description",
@@ -645,12 +565,7 @@ local AceConfig = {
                 NS.OnDbChanged()
               end,
             },
-            spacer1 = {
-              name = "",
-              type = "description",
-              order = 2,
-              width = 0.1,
-            },
+            spacer1 = { name = "", type = "description", order = 2, width = 0.1 },
             test = {
               name = "Test Mode",
               desc = "Turn on to test settings immediately",
@@ -668,12 +583,7 @@ local AceConfig = {
                 NS.OnDbChanged()
               end,
             },
-            spacer2 = {
-              name = "",
-              type = "description",
-              order = 4,
-              width = "full",
-            },
+            spacer2 = { name = "", type = "description", order = 4, width = "full" },
             desc1 = {
               name = "Show for:",
               fontSize = "medium",
@@ -713,12 +623,7 @@ local AceConfig = {
                 NS.OnDbChanged()
               end,
             },
-            spacer3 = {
-              name = "",
-              type = "description",
-              order = 8,
-              width = "full",
-            },
+            spacer3 = { name = "", type = "description", order = 8, width = "full" },
             desc2 = {
               name = "Show in:",
               fontSize = "medium",
@@ -774,12 +679,7 @@ local AceConfig = {
                 NS.OnDbChanged()
               end,
             },
-            spacer4 = {
-              name = "",
-              type = "description",
-              order = 13,
-              width = "full",
-            },
+            spacer4 = { name = "", type = "description", order = 13, width = "full" },
             position = {
               name = "Position",
               type = "select",
@@ -804,12 +704,7 @@ local AceConfig = {
                 NS.OnDbChanged()
               end,
             },
-            spacer5 = {
-              name = "",
-              type = "description",
-              order = 15,
-              width = 0.1,
-            },
+            spacer5 = { name = "", type = "description", order = 15, width = 0.1 },
             attachToHealthBar = {
               name = "Attach directly to the healthbar",
               type = "toggle",
@@ -826,12 +721,7 @@ local AceConfig = {
                 NS.OnDbChanged()
               end,
             },
-            spacer6 = {
-              name = "",
-              type = "description",
-              order = 17,
-              width = "full",
-            },
+            spacer6 = { name = "", type = "description", order = 17, width = "full" },
             offsetX = {
               name = "Offset X",
               type = "range",
@@ -872,12 +762,7 @@ local AceConfig = {
                 NS.OnDbChanged()
               end,
             },
-            spacer7 = {
-              name = "",
-              type = "description",
-              order = 20,
-              width = "full",
-            },
+            spacer7 = { name = "", type = "description", order = 20, width = "full" },
             scale = {
               name = "Scale",
               type = "range",
@@ -898,12 +783,7 @@ local AceConfig = {
                 NS.OnDbChanged()
               end,
             },
-            spacer8 = {
-              name = " ",
-              type = "description",
-              order = 22,
-              width = "full",
-            },
+            spacer8 = { name = " ", type = "description", order = 22, width = "full" },
             iconDesc = {
               name = "Icon:",
               type = "description",
@@ -941,12 +821,7 @@ local AceConfig = {
                 NS.OnDbChanged()
               end,
             },
-            spacer1 = {
-              name = "",
-              type = "description",
-              order = 2,
-              width = 0.1,
-            },
+            spacer1 = { name = "", type = "description", order = 2, width = 0.1 },
             test = {
               name = "Test Mode",
               desc = "Turn on to test settings immediately",
@@ -964,12 +839,7 @@ local AceConfig = {
                 NS.OnDbChanged()
               end,
             },
-            spacer2 = {
-              name = "",
-              type = "description",
-              order = 4,
-              width = "full",
-            },
+            spacer2 = { name = "", type = "description", order = 4, width = "full" },
             position = {
               name = "Position",
               type = "select",
@@ -994,12 +864,7 @@ local AceConfig = {
                 NS.OnDbChanged()
               end,
             },
-            spacer3 = {
-              name = "",
-              type = "description",
-              order = 6,
-              width = 0.1,
-            },
+            spacer3 = { name = "", type = "description", order = 6, width = 0.1 },
             attachToHealthBar = {
               name = "Attach directly to the healthbar",
               type = "toggle",
@@ -1016,12 +881,7 @@ local AceConfig = {
                 NS.OnDbChanged()
               end,
             },
-            spacer4 = {
-              name = "",
-              type = "description",
-              order = 8,
-              width = "full",
-            },
+            spacer4 = { name = "", type = "description", order = 8, width = "full" },
             offsetX = {
               name = "Offset X",
               type = "range",
@@ -1062,12 +922,7 @@ local AceConfig = {
                 NS.OnDbChanged()
               end,
             },
-            spacer5 = {
-              name = "",
-              type = "description",
-              order = 11,
-              width = "full",
-            },
+            spacer5 = { name = "", type = "description", order = 11, width = "full" },
             scale = {
               name = "Scale",
               type = "range",
@@ -1088,12 +943,7 @@ local AceConfig = {
                 NS.OnDbChanged()
               end,
             },
-            spacer6 = {
-              name = " ",
-              type = "description",
-              order = 13,
-              width = "full",
-            },
+            spacer6 = { name = " ", type = "description", order = 13, width = "full" },
             iconDesc = {
               name = "Icon:",
               type = "description",
@@ -1131,12 +981,7 @@ local AceConfig = {
                 NS.OnDbChanged()
               end,
             },
-            spacer1 = {
-              name = "",
-              type = "description",
-              order = 2,
-              width = 0.1,
-            },
+            spacer1 = { name = "", type = "description", order = 2, width = 0.1 },
             test = {
               name = "Test Mode: Add a marker to anyones nameplate to test",
               desc = "",
@@ -1155,12 +1000,7 @@ local AceConfig = {
                 NS.OnDbChanged()
               end,
             },
-            spacer2 = {
-              name = "",
-              type = "description",
-              order = 4,
-              width = "full",
-            },
+            spacer2 = { name = "", type = "description", order = 4, width = "full" },
             override = {
               name = "Override & Replace other icons",
               desc = "Override and replace any existing icons for units with markers assigned",
@@ -1178,12 +1018,7 @@ local AceConfig = {
                 NS.OnDbChanged()
               end,
             },
-            spacer3 = {
-              name = "",
-              type = "description",
-              order = 6,
-              width = "full",
-            },
+            spacer3 = { name = "", type = "description", order = 6, width = "full" },
             position = {
               name = "Position",
               type = "select",
@@ -1210,12 +1045,7 @@ local AceConfig = {
                 NS.OnDbChanged()
               end,
             },
-            spacer4 = {
-              name = "",
-              type = "description",
-              order = 8,
-              width = 0.1,
-            },
+            spacer4 = { name = "", type = "description", order = 8, width = 0.1 },
             attachToHealthBar = {
               name = "Attach directly to the healthbar",
               type = "toggle",
@@ -1232,12 +1062,7 @@ local AceConfig = {
                 NS.OnDbChanged()
               end,
             },
-            spacer5 = {
-              name = "",
-              type = "description",
-              order = 108,
-              width = "full",
-            },
+            spacer5 = { name = "", type = "description", order = 108, width = "full" },
             offsetX = {
               name = "Offset X",
               type = "range",
@@ -1278,12 +1103,7 @@ local AceConfig = {
                 NS.OnDbChanged()
               end,
             },
-            spacer6 = {
-              name = "",
-              type = "description",
-              order = 13,
-              width = "full",
-            },
+            spacer6 = { name = "", type = "description", order = 13, width = "full" },
             scale = {
               name = "Scale",
               type = "range",
@@ -1304,12 +1124,7 @@ local AceConfig = {
                 NS.OnDbChanged()
               end,
             },
-            spacer7 = {
-              name = " ",
-              type = "description",
-              order = 15,
-              width = "full",
-            },
+            spacer7 = { name = " ", type = "description", order = 15, width = "full" },
             iconDesc = {
               name = "Icon:",
               type = "description",
@@ -1330,221 +1145,186 @@ local AceConfig = {
           },
         },
         -- objective = {
-        -- 	name = "Objective",
-        -- 	type = "group",
-        -- 	order = 6,
-        -- 	args = {
-        -- 		enable = {
-        -- 			name = "Enable",
-        -- 			type = "toggle",
-        -- 			order = 1,
-        -- 			width = 0.4,
-        -- 			get = function(_)
-        -- 				return NS.db.objective.enabled
-        -- 			end,
-        -- 			set = function(_, val)
-        -- 				NS.db.objective.enabled = val
-        -- 				NS.OnDbChanged()
-        -- 			end,
-        -- 		},
-        -- 		spacer1 = {
-        -- 			name = "",
-        -- 			type = "description",
-        -- 			order = 2,
-        -- 			width = 0.1,
-        -- 		},
-        -- 		test = {
-        -- 			name = "Test Mode: Go to any elite, rare mob, or tanking dummy to test",
-        -- 			desc = "",
-        -- 			type = "description",
-        -- 			order = 3,
-        -- 			width = 2.4,
-        -- 			fontSize = "medium",
-        -- 			disabled = function(_)
-        -- 				return not NS.db.objective.enabled
-        -- 			end,
-        -- 			get = function(_)
-        -- 				return NS.db.objective.test
-        -- 			end,
-        -- 			set = function(_, val)
-        -- 				NS.db.objective.test = val
-        -- 				NS.OnDbChanged()
-        -- 			end,
-        -- 		},
-        -- 		spacer2 = {
-        -- 			name = "",
-        -- 			type = "description",
-        -- 			order = 4,
-        -- 			width = "full",
-        -- 		},
-        -- 		override = {
-        -- 			name = "Override & Replace other icons, even markers",
-        -- 			desc = "Override and replace any and all existing icons for units with flags, orbs, or crystals assigned",
-        -- 			type = "toggle",
-        -- 			order = 5,
-        -- 			width = "full",
-        -- 			disabled = function(_)
-        -- 				return not NS.db.objective.enabled
-        -- 			end,
-        -- 			get = function(_)
-        -- 				return NS.db.objective.override
-        -- 			end,
-        -- 			set = function(_, val)
-        -- 				NS.db.objective.override = val
-        -- 				NS.OnDbChanged()
-        -- 			end,
-        -- 		},
-        -- 		spacer3 = {
-        -- 			name = "",
-        -- 			type = "description",
-        -- 			order = 6,
-        -- 			width = "full",
-        -- 		},
-        -- 		position = {
-        -- 			name = "Position",
-        -- 			type = "select",
-        -- 			order = 7,
-        -- 			width = 1.0,
-        -- 			values = {
-        -- 				["LEFT"] = "Left",
-        -- 				["TOP"] = "Top",
-        -- 				["RIGHT"] = "Right",
-        -- 			},
-        -- 			sorting = {
-        -- 				"LEFT",
-        -- 				"TOP",
-        -- 				"RIGHT",
-        -- 			},
-        -- 			disabled = function(_)
-        -- 				return not NS.db.objective.enabled
-        -- 			end,
-        -- 			get = function(_)
-        -- 				return NS.db.objective.position
-        -- 			end,
-        -- 			set = function(_, val)
-        -- 				NS.db.objective.position = val
-        -- 				NS.OnDbChanged()
-        -- 			end,
-        -- 		},
-        -- 		spacer4 = {
-        -- 			name = "",
-        -- 			type = "description",
-        -- 			order = 8,
-        -- 			width = 0.1,
-        -- 		},
-        -- 		attachToHealthBar = {
-        -- 			name = "Attach directly to the healthbar",
-        -- 			type = "toggle",
-        -- 			order = 9,
-        -- 			width = 1.5,
-        -- 			disabled = function(_)
-        -- 				return not NS.db.objective.enabled
-        -- 			end,
-        -- 			get = function(_)
-        -- 				return NS.db.objective.attachToHealthBar
-        -- 			end,
-        -- 			set = function(_, val)
-        -- 				NS.db.objective.attachToHealthBar = val
-        -- 				NS.OnDbChanged()
-        -- 			end,
-        -- 		},
-        -- 		spacer5 = {
-        -- 			name = "",
-        -- 			type = "description",
-        -- 			order = 108,
-        -- 			width = "full",
-        -- 		},
-        -- 		offsetX = {
-        -- 			name = "Offset X",
-        -- 			type = "range",
-        -- 			order = 11,
-        -- 			width = 1.2,
-        -- 			isPercent = false,
-        -- 			min = -100,
-        -- 			max = 100,
-        -- 			step = 1,
-        -- 			disabled = function(_)
-        -- 				return not NS.db.objective.enabled
-        -- 			end,
-        -- 			get = function(_)
-        -- 				return NS.db.objective.offsetX
-        -- 			end,
-        -- 			set = function(_, val)
-        -- 				NS.db.objective.offsetX = val
-        -- 				NS.OnDbChanged()
-        -- 			end,
-        -- 		},
-        -- 		offsetY = {
-        -- 			name = "Offset Y",
-        -- 			type = "range",
-        -- 			order = 12,
-        -- 			width = 1.2,
-        -- 			isPercent = false,
-        -- 			min = -100,
-        -- 			max = 100,
-        -- 			step = 1,
-        -- 			disabled = function(_)
-        -- 				return not NS.db.objective.enabled
-        -- 			end,
-        -- 			get = function(_)
-        -- 				return NS.db.objective.offsetY
-        -- 			end,
-        -- 			set = function(_, val)
-        -- 				NS.db.objective.offsetY = val
-        -- 				NS.OnDbChanged()
-        -- 			end,
-        -- 		},
-        -- 		spacer6 = {
-        -- 			name = "",
-        -- 			type = "description",
-        -- 			order = 13,
-        -- 			width = "full",
-        -- 		},
-        -- 		scale = {
-        -- 			name = "Scale",
-        -- 			type = "range",
-        -- 			order = 14,
-        -- 			width = 1.75,
-        -- 			isPercent = false,
-        -- 			min = 0.5,
-        -- 			max = 3,
-        -- 			step = 0.01,
-        -- 			disabled = function(_)
-        -- 				return not NS.db.objective.enabled
-        -- 			end,
-        -- 			get = function(_)
-        -- 				return NS.db.objective.scale
-        -- 			end,
-        -- 			set = function(_, val)
-        -- 				NS.db.objective.scale = val
-        -- 				NS.OnDbChanged()
-        -- 			end,
-        -- 		},
-        -- 		spacer7 = {
-        -- 			name = " ",
-        -- 			type = "description",
-        -- 			order = 15,
-        -- 			width = "full",
-        -- 		},
-        -- 		iconDesc = {
-        -- 			name = "Icon:",
-        -- 			type = "description",
-        -- 			order = 16,
-        -- 			width = "full",
-        -- 		},
-        -- 		iconImage = {
-        -- 			name = " ",
-        -- 			type = "description",
-        -- 			dialogControl = "NPI_Label",
-        -- 			order = 17,
-        -- 			image = function(info)
-        -- 				return UnitFactionGroup("player") == "Alliance" and "ctf_flags-rightIcon1-state1xatlas"
-        -- 					or "ctf_flags-leftIcon1-state1xatlas"
-        -- 			end,
-        -- 			imageHeight = 48,
-        -- 			imageWidth = 48,
-        -- 		},
-        -- 	},
+        --   name = "Objective",
+        --   type = "group",
+        --   order = 6,
+        --   args = {
+        --     enable = {
+        --       name = "Enable",
+        --       type = "toggle",
+        --       order = 1,
+        --       width = 0.4,
+        --       get = function(_)
+        --         return NS.db.objective.enabled
+        --       end,
+        --       set = function(_, val)
+        --         NS.db.objective.enabled = val
+        --         NS.OnDbChanged()
+        --       end,
+        --     },
+        --     spacer1 = { name = "", type = "description", order = 2, width = 0.1 },
+        --     test = {
+        --       name = "Test Mode: Go to any elite, rare mob, or tanking dummy to test",
+        --       desc = "",
+        --       type = "description",
+        --       order = 3,
+        --       width = 2.4,
+        --       fontSize = "medium",
+        --       disabled = function(_)
+        --         return not NS.db.objective.enabled
+        --       end,
+        --       get = function(_)
+        --         return NS.db.objective.test
+        --       end,
+        --       set = function(_, val)
+        --         NS.db.objective.test = val
+        --         NS.OnDbChanged()
+        --       end,
+        --     },
+        --     spacer2 = { name = "", type = "description", order = 4, width = "full" },
+        --     override = {
+        --       name = "Override & Replace other icons, even markers",
+        --       desc = "Override and replace any and all existing icons for units with flags, orbs, or crystals assigned",
+        --       type = "toggle",
+        --       order = 5,
+        --       width = "full",
+        --       disabled = function(_)
+        --         return not NS.db.objective.enabled
+        --       end,
+        --       get = function(_)
+        --         return NS.db.objective.override
+        --       end,
+        --       set = function(_, val)
+        --         NS.db.objective.override = val
+        --         NS.OnDbChanged()
+        --       end,
+        --     },
+        --     spacer3 = { name = "", type = "description", order = 6, width = "full" },
+        --     position = {
+        --       name = "Position",
+        --       type = "select",
+        --       order = 7,
+        --       width = 1.0,
+        --       values = {
+        --         ["LEFT"] = "Left",
+        --         ["TOP"] = "Top",
+        --         ["RIGHT"] = "Right",
+        --       },
+        --       sorting = {
+        --         "LEFT",
+        --         "TOP",
+        --         "RIGHT",
+        --       },
+        --       disabled = function(_)
+        --         return not NS.db.objective.enabled
+        --       end,
+        --       get = function(_)
+        --         return NS.db.objective.position
+        --       end,
+        --       set = function(_, val)
+        --         NS.db.objective.position = val
+        --         NS.OnDbChanged()
+        --       end,
+        --     },
+        --     spacer4 = { name = "", type = "description", order = 8, width = 0.1 },
+        --     attachToHealthBar = {
+        --       name = "Attach directly to the healthbar",
+        --       type = "toggle",
+        --       order = 9,
+        --       width = 1.5,
+        --       disabled = function(_)
+        --         return not NS.db.objective.enabled
+        --       end,
+        --       get = function(_)
+        --         return NS.db.objective.attachToHealthBar
+        --       end,
+        --       set = function(_, val)
+        --         NS.db.objective.attachToHealthBar = val
+        --         NS.OnDbChanged()
+        --       end,
+        --     },
+        --     spacer5 = { name = "", type = "description", order = 108, width = "full" },
+        --     offsetX = {
+        --       name = "Offset X",
+        --       type = "range",
+        --       order = 11,
+        --       width = 1.2,
+        --       isPercent = false,
+        --       min = -100,
+        --       max = 100,
+        --       step = 1,
+        --       disabled = function(_)
+        --         return not NS.db.objective.enabled
+        --       end,
+        --       get = function(_)
+        --         return NS.db.objective.offsetX
+        --       end,
+        --       set = function(_, val)
+        --         NS.db.objective.offsetX = val
+        --         NS.OnDbChanged()
+        --       end,
+        --     },
+        --     offsetY = {
+        --       name = "Offset Y",
+        --       type = "range",
+        --       order = 12,
+        --       width = 1.2,
+        --       isPercent = false,
+        --       min = -100,
+        --       max = 100,
+        --       step = 1,
+        --       disabled = function(_)
+        --         return not NS.db.objective.enabled
+        --       end,
+        --       get = function(_)
+        --         return NS.db.objective.offsetY
+        --       end,
+        --       set = function(_, val)
+        --         NS.db.objective.offsetY = val
+        --         NS.OnDbChanged()
+        --       end,
+        --     },
+        --     spacer6 = { name = "", type = "description", order = 13, width = "full" },
+        --     scale = {
+        --       name = "Scale",
+        --       type = "range",
+        --       order = 14,
+        --       width = 1.75,
+        --       isPercent = false,
+        --       min = 0.5,
+        --       max = 3,
+        --       step = 0.01,
+        --       disabled = function(_)
+        --         return not NS.db.objective.enabled
+        --       end,
+        --       get = function(_)
+        --         return NS.db.objective.scale
+        --       end,
+        --       set = function(_, val)
+        --         NS.db.objective.scale = val
+        --         NS.OnDbChanged()
+        --       end,
+        --     },
+        --     spacer7 = { name = " ", type = "description", order = 15, width = "full" },
+        --     iconDesc = {
+        --       name = "Icon:",
+        --       type = "description",
+        --       order = 16,
+        --       width = "full",
+        --     },
+        --     iconImage = {
+        --       name = " ",
+        --       type = "description",
+        --       dialogControl = "NPI_Label",
+        --       order = 17,
+        --       image = function(info)
+        --         return UnitFactionGroup("player") == "Alliance" and "ctf_flags-rightIcon1-state1xatlas"
+        --           or "ctf_flags-leftIcon1-state1xatlas"
+        --       end,
+        --       imageHeight = 48,
+        --       imageWidth = 48,
+        --     },
+        --   },
         -- },
         npc = {
           name = "Totems/Pets",
@@ -1564,12 +1344,7 @@ local AceConfig = {
                 NS.OnDbChanged()
               end,
             },
-            spacer1 = {
-              name = "",
-              type = "description",
-              order = 2,
-              width = 0.1,
-            },
+            spacer1 = { name = "", type = "description", order = 2, width = 0.1 },
             test = {
               name = "Test Mode",
               desc = "Turn on to test settings immediately",
@@ -1587,12 +1362,7 @@ local AceConfig = {
                 NS.OnDbChanged()
               end,
             },
-            spacer2 = {
-              name = "",
-              type = "description",
-              order = 4,
-              width = "full",
-            },
+            spacer2 = { name = "", type = "description", order = 4, width = "full" },
             desc1 = {
               name = "Show for:",
               fontSize = "medium",
@@ -1632,12 +1402,7 @@ local AceConfig = {
                 NS.OnDbChanged()
               end,
             },
-            spacer3 = {
-              name = "",
-              type = "description",
-              order = 8,
-              width = "full",
-            },
+            spacer3 = { name = "", type = "description", order = 8, width = "full" },
             desc2 = {
               name = "Show in:",
               fontSize = "medium",
@@ -1693,12 +1458,7 @@ local AceConfig = {
                 NS.OnDbChanged()
               end,
             },
-            spacer4 = {
-              name = "",
-              type = "description",
-              order = 13,
-              width = "full",
-            },
+            spacer4 = { name = "", type = "description", order = 13, width = "full" },
             position = {
               name = "Position",
               type = "select",
@@ -1725,12 +1485,7 @@ local AceConfig = {
                 NS.OnDbChanged()
               end,
             },
-            spacer5 = {
-              name = "",
-              type = "description",
-              order = 15,
-              width = 0.1,
-            },
+            spacer5 = { name = "", type = "description", order = 15, width = 0.1 },
             attachToHealthBar = {
               name = "Attach directly to the healthbar",
               type = "toggle",
@@ -1747,12 +1502,7 @@ local AceConfig = {
                 NS.OnDbChanged()
               end,
             },
-            spacer6 = {
-              name = "",
-              type = "description",
-              order = 17,
-              width = "full",
-            },
+            spacer6 = { name = "", type = "description", order = 17, width = "full" },
             offsetX = {
               name = "Offset X",
               type = "range",
@@ -1793,12 +1543,7 @@ local AceConfig = {
                 NS.OnDbChanged()
               end,
             },
-            spacer7 = {
-              name = "",
-              type = "description",
-              order = 20,
-              width = "full",
-            },
+            spacer7 = { name = "", type = "description", order = 20, width = "full" },
             scale = {
               name = "Scale",
               type = "range",
@@ -1819,12 +1564,7 @@ local AceConfig = {
                 NS.OnDbChanged()
               end,
             },
-            spacer8 = {
-              name = " ",
-              type = "description",
-              order = 22,
-              width = "full",
-            },
+            spacer8 = { name = " ", type = "description", order = 22, width = "full" },
             desc3 = {
               name = "The following setting only works properly when the npc nameplate is in view when cast.",
               fontSize = "small",
@@ -1832,12 +1572,7 @@ local AceConfig = {
               order = 23,
               width = 1.5,
             },
-            spacer9 = {
-              name = "",
-              type = "description",
-              order = 24,
-              width = "full",
-            },
+            spacer9 = { name = "", type = "description", order = 24, width = "full" },
             showCountdown = {
               name = "Show countdown duration on icon",
               type = "toggle",
@@ -1905,12 +1640,7 @@ local AceConfig = {
             NS.OnDbChanged()
           end,
         },
-        spacer1 = {
-          name = "",
-          type = "description",
-          order = 3,
-          width = "full",
-        },
+        spacer1 = { name = "", type = "description", order = 3, width = "full" },
         ignoreNameplateAlpha = {
           name = "Ignore nameplate alpha",
           type = "toggle",
@@ -1937,12 +1667,7 @@ local AceConfig = {
             NS.OnDbChanged()
           end,
         },
-        spacer2 = {
-          name = "",
-          type = "description",
-          order = 6,
-          width = "full",
-        },
+        spacer2 = { name = "", type = "description", order = 6, width = "full" },
         desc = {
           name = "The following settings may be affected by other addons.",
           fontSize = "small",
@@ -2275,12 +2000,7 @@ local AceConfig = {
             return "https://discord.gg/A3g5qZqtdc"
           end,
         },
-        spacer2 = {
-          name = "",
-          type = "description",
-          order = 4,
-          width = "full",
-        },
+        spacer2 = { name = "", type = "description", order = 4, width = "full" },
       },
     },
     profiles = {
@@ -2415,12 +2135,7 @@ local AceConfig = {
           order = 4,
           width = 2.0,
         },
-        spacer1 = {
-          name = "",
-          type = "description",
-          order = 5,
-          width = "full",
-        },
+        spacer1 = { name = "", type = "description", order = 5, width = "full" },
         import = {
           name = "Import Profile",
           desc = "Import an exported NameplateIcons profile string",
