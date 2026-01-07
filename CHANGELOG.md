@@ -1,5 +1,9 @@
 # Nameplate Icons
 
+## [v1.3.1](https://github.com/rbgdevx/nameplate-icons/releases/tag/v1.3.1) (2026-01-07)
+
+- Adding logo
+
 ## [v1.3.0](https://github.com/rbgdevx/nameplate-icons/releases/tag/v1.3.0) (2026-01-06)
 
 - Updating toc
